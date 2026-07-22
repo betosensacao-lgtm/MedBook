@@ -1,0 +1,117 @@
+{
+  "name": "MedBook - Triagem de Pacientes (n8n)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "legacy-patient-ingest",
+        "options": {}
+      },
+      "id": "m1f1c7d2-7e0b-488f-a89c-a1d2f9b8c0a1",
+      "name": "Webhook (Simula Sistema Legado/Email)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        460,
+        300
+      ],
+      "webhookId": "medbook-webhook-id"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a918a221-118e-4f76-8f3b-e011b93f9463",
+              "name": "clinicId",
+              "value": "default",
+              "type": "string"
+            },
+            {
+              "id": "b3e5124f-c0c1-4b10-8b2b-09e7c5b62e4a",
+              "name": "sessionId",
+              "value": "={{ $json.body.patient_id || $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "c7a8291f-0e12-4c22-9e8a-1a89c1f23d4e",
+              "name": "text",
+              "value": "={{ $json.body.message || $json.body.symptoms }}",
+              "type": "string"
+            },
+            {
+              "id": "d8b9302e-1f23-4d33-af9b-2b9a02034e5f",
+              "name": "platform",
+              "value": "n8n_webhook",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "m2e2d8e3-8f1c-599g-b90d-b2e30a09d1b2",
+      "name": "Formatar Payload p/ Triagem",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3000/api/n8n/webhook",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer SUP3R_S3CR3T_K3Y"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "m3f3e9f4-9g2d-6aa1-c01e-c3f41b10e2c3",
+      "name": "Chamar MedBook AI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        900,
+        300
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook (Simula Sistema Legado/Email)": {
+      "main": [
+        [
+          {
+            "node": "Formatar Payload p/ Triagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatar Payload p/ Triagem": {
+      "main": [
+        [
+          {
+            "node": "Chamar MedBook AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "medbook-a1b2c3d4-5e6f"
+}
