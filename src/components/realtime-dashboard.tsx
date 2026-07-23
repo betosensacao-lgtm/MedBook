@@ -10,6 +10,7 @@ export function RealtimeDashboard() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    if (!supabase) return;
     const channel = supabase
       .channel("medbook-realtime")
       .on(
