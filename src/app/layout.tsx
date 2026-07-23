@@ -3,6 +3,7 @@ import { Sora, Inter } from "next/font/google";
 import "@/styles/globals.css";
 import { Toaster } from "sonner";
 import { Analytics } from "@/components/Analytics";
+import { RealtimeDashboard } from "@/components/realtime-dashboard";
 
 const sora = Sora({
   subsets: ["latin"],
@@ -78,6 +79,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <Toaster richColors position="top-right" />
         <Analytics />
+        <RealtimeDashboard />
       </body>
     </html>
   );

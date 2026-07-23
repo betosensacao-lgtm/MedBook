@@ -1,27 +1,29 @@
 import {
-  pgTable,
   text,
   timestamp,
   boolean,
   integer,
   real,
   uuid,
-  pgEnum,
   jsonb,
   date,
   time,
+  pgSchema,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
+export const medbookSchema = pgSchema("medbook");
+export const pgTable = medbookSchema.table;
+
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
-export const userRoleEnum = pgEnum("user_role", [
+export const userRoleEnum = medbookSchema.enum("user_role", [
   "patient",
   "clinic_admin",
   "professional",
 ]);
 
-export const appointmentStatusEnum = pgEnum("appointment_status", [
+export const appointmentStatusEnum = medbookSchema.enum("appointment_status", [
   "pending",
   "confirmed",
   "cancelled",
@@ -29,7 +31,7 @@ export const appointmentStatusEnum = pgEnum("appointment_status", [
   "no_show",
 ]);
 
-export const clinicSpecialtyEnum = pgEnum("clinic_specialty", [
+export const clinicSpecialtyEnum = medbookSchema.enum("clinic_specialty", [
   "general_practice",
   "dentistry",
   "aesthetics",
@@ -44,24 +46,24 @@ export const clinicSpecialtyEnum = pgEnum("clinic_specialty", [
   "other",
 ]);
 
-export const genderEnum = pgEnum("gender", [
+export const genderEnum = medbookSchema.enum("gender", [
   "male",
   "female",
   "other",
   "prefer_not_to_say",
 ]);
 
-export const triageUrgencyEnum = pgEnum("urgency_classification", ["RED", "YELLOW", "GREEN"]);
+export const triageUrgencyEnum = medbookSchema.enum("urgency_classification", ["RED", "YELLOW", "GREEN"]);
 
-export const triageStatusEnum = pgEnum("triage_status", ["PENDING", "REVIEWED", "ARCHIVED"]);
+export const triageStatusEnum = medbookSchema.enum("triage_status", ["PENDING", "REVIEWED", "ARCHIVED"]);
 
-export const whatsappSessionStatusEnum = pgEnum("whatsapp_session_status", [
+export const whatsappSessionStatusEnum = medbookSchema.enum("whatsapp_session_status", [
   "active",
   "completed",
   "abandoned",
 ]);
 
-export const billingCycleEnum = pgEnum("billing_cycle", [
+export const billingCycleEnum = medbookSchema.enum("billing_cycle", [
   "monthly",
   "yearly",
 ]);

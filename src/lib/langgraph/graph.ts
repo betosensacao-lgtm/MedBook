@@ -12,7 +12,7 @@ import {
   routeAfterScheduling,
   routeAfterPreAnamnesis,
 } from "./edges";
-import { getCheckpointer } from "./persistence";
+import { getCheckpointer, ensureCheckpointerSetup } from "./persistence";
 import type { RunnableConfig } from "@langchain/core/runnables";
 
 function createChatGraph() {
@@ -73,6 +73,7 @@ export async function runChatGraph(
     ? { configurable: { thread_id: threadId } }
     : {};
 
+  await ensureCheckpointerSetup();
   return chatGraph.invoke(state, config);
 }
 
@@ -90,6 +91,7 @@ export async function* streamChatGraph(
     ? { configurable: { thread_id: threadId } }
     : {};
 
+  await ensureCheckpointerSetup();
   const stream = await chatGraph.stream(state, {
     ...config,
     streamMode: ["updates"],

@@ -31,13 +31,13 @@
             {
               "id": "b3e5124f-c0c1-4b10-8b2b-09e7c5b62e4a",
               "name": "sessionId",
-              "value": "={{ $json.body.patient_id || $json.body.email }}",
+              "value": "={{ $json.patient_id || $json.email || $json.body.patient_id || $json.body.email }}",
               "type": "string"
             },
             {
               "id": "c7a8291f-0e12-4c22-9e8a-1a89c1f23d4e",
               "name": "text",
-              "value": "={{ $json.body.message || $json.body.symptoms }}",
+              "value": "={{ $json.message || $json.symptoms || $json.body.message || $json.body.symptoms }}",
               "type": "string"
             },
             {
