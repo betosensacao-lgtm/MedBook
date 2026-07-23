@@ -370,3 +370,23 @@ export const adminUsersRelations = relations(adminUsers, ({ one }) => ({
 export const passwordResetTokensRelations = relations(passwordResetTokens, ({ one }) => ({
   user: one(adminUsers, { fields: [passwordResetTokens.userId], references: [adminUsers.id] }),
 }));
+
+// ─── Google OAuth ──────────────────────────────────────────────────────────
+
+export const googleConnections = pgTable("google_connections", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  email: text("email").notNull(),
+  scope: text("scope").notNull(),
+  accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token"),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const googleConnectionsRelations = relations(googleConnections, ({ one }) => ({
+  user: one(users, { fields: [googleConnections.userId], references: [users.id] }),
+}));
