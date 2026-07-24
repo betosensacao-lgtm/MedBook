@@ -1,28 +1,26 @@
-import { listUpcomingEvents } from "@/lib/calendar/google";
+"use client";
 
-export const dynamic = "force-dynamic";
+import { useState, useEffect } from "react";
+import type { CalendarEvent } from "@/lib/calendar/types";
 
-export default async function AdminCalendarPage() {
-  const calendarId = process.env.GOOGLE_CALENDAR_ID;
-  if (!calendarId) {
-    return (
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Calendário de Agendamentos</h1>
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-800">
-          GOOGLE_CALENDAR_ID nao configurado. Defina esta variavel de ambiente para visualizar os agendamentos.
-        </div>
-      </div>
-    );
-  }
+export default function AdminCalendarPage() {
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  let events: Awaited<ReturnType<typeof listUpcomingEvents>> = [];
-  let error: string | null = null;
-
-  try {
-    events = await listUpcomingEvents(calendarId);
-  } catch (e) {
-    error = e instanceof Error ? e.message : "Erro ao carregar eventos";
-  }
+  useEffect(() => {
+    fetch("/api/calendar/events")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) {
+          setError(data.error);
+        } else {
+          setEvents(data.events || []);
+        }
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -39,11 +37,13 @@ export default async function AdminCalendarPage() {
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
         <div className="p-4 border-b border-gray-100">
           <p className="text-sm text-gray-500">
-            {events.length} consulta(s) agendada(s)
+            {loading ? "Carregando..." : `${events.length} consulta(s) agendada(s)`}
           </p>
         </div>
 
-        {events.length === 0 ? (
+        {loading ? (
+          <div className="p-8 text-center text-gray-500">Carregando eventos...</div>
+        ) : events.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             Nenhuma consulta agendada nos próximos dias.
           </div>
