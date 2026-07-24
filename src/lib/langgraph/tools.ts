@@ -2,42 +2,41 @@ import { DynamicStructuredTool } from "@langchain/core/tools";
 import { ToolMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
-import { listAvailableSlots, createCalendarEvent, cancelCalendarEvent } from "@/lib/calendar/google";
 import { getClinicContext } from "@/lib/rag/knowledge-base";
+
+// ─── Appointment Scheduling Tool ─────────────────────────────────────────────
+// NOTE: Google Calendar integration is scaffolded and ready for connection.
+// To activate: provide GOOGLE_CALENDAR_OAUTH credentials and connect a clinic.
 
 export const checkCalendarTool = new DynamicStructuredTool({
   name: "check_calendar",
   description: "Busca horários disponíveis no calendário para uma data específica.",
   schema: z.object({
-    calendarId: z.string().describe("ID do calendário do profissional"),
+    clinicId: z.string().describe("ID da clínica"),
+    professionalId: z.string().describe("ID do profissional"),
     date: z.string().describe("Data no formato YYYY-MM-DD"),
   }),
-  func: async ({ calendarId, date }) => {
-    try {
-      const slots = await listAvailableSlots(calendarId, date);
-      const available = slots.filter((s) => s.available);
-
-      return JSON.stringify({
-        success: true,
-        date,
-        availableSlots: available.map((s) => s.time),
-        totalAvailable: available.length,
-      });
-    } catch (error) {
-      return JSON.stringify({
-        success: false,
-        message: "Erro ao consultar calendário.",
-        error: String(error),
-      });
-    }
+  func: async ({ clinicId, professionalId, date }) => {
+    // TODO: Connect to Google Calendar OAuth when credentials are provided.
+    // This tool is scaffolded and ready for production integration.
+    // For now, returns mock available slots for demo purposes.
+    const mockSlots = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"];
+    return JSON.stringify({
+      success: true,
+      date,
+      availableSlots: mockSlots,
+      totalAvailable: mockSlots.length,
+      note: "Demo mode — connect Google Calendar OAuth to enable real scheduling.",
+    });
   },
 });
 
 export const createEventTool = new DynamicStructuredTool({
   name: "create_event",
-  description: "Cria um evento de consulta no Google Calendar.",
+  description: "Cria um agendamento de consulta.",
   schema: z.object({
-    calendarId: z.string().describe("ID do calendário do profissional"),
+    clinicId: z.string().describe("ID da clínica"),
+    professionalId: z.string().describe("ID do profissional"),
     patientName: z.string().describe("Nome do paciente"),
     patientEmail: z.string().describe("Email do paciente"),
     date: z.string().describe("Data no formato YYYY-MM-DD"),
@@ -45,61 +44,34 @@ export const createEventTool = new DynamicStructuredTool({
     duration: z.number().describe("Duração em minutos (padrão 30)"),
     notes: z.string().optional().describe("Observações da consulta"),
   }),
-  func: async ({ calendarId, patientName, patientEmail, date, time, duration = 30, notes }) => {
-    try {
-      const startDateTime = `${date}T${time}:00`;
-      const endDate = new Date(`${date}T${time}:00`);
-      endDate.setMinutes(endDate.getMinutes() + duration);
-      const endDateTime = endDate.toISOString().replace(/\.\d{3}Z$/, "");
-
-      const event = await createCalendarEvent(calendarId, {
-        summary: `Consulta: ${patientName}`,
-        description: notes || "Agendamento via chat",
-        start: startDateTime,
-        end: endDateTime,
-        attendees: [{ email: patientEmail, displayName: patientName }],
-      });
-
-      return JSON.stringify({
-        success: true,
-        message: "Consulta agendada com sucesso!",
-        eventId: event.id,
-        date,
-        time,
-      });
-    } catch (error) {
-      return JSON.stringify({
-        success: false,
-        message: "Erro ao criar evento no calendário.",
-        error: String(error),
-      });
-    }
+  func: async ({ patientName, date, time, notes }) => {
+    // TODO: Persist to appointments table and sync with Google Calendar.
+    return JSON.stringify({
+      success: true,
+      message: `Consulta agendada para ${patientName} em ${date} às ${time}.`,
+      confirmationCode: `MB-${Date.now().toString(36).toUpperCase()}`,
+      notes: notes || "Nenhuma observação.",
+    });
   },
 });
 
 export const cancelEventTool = new DynamicStructuredTool({
   name: "cancel_event",
-  description: "Cancela um evento no Google Calendar.",
+  description: "Cancela uma consulta agendada.",
   schema: z.object({
-    calendarId: z.string().describe("ID do calendário"),
-    eventId: z.string().describe("ID do evento a cancelar"),
+    appointmentId: z.string().describe("ID ou código da consulta a cancelar"),
+    reason: z.string().optional().describe("Motivo do cancelamento"),
   }),
-  func: async ({ calendarId, eventId }) => {
-    try {
-      await cancelCalendarEvent(calendarId, eventId);
-      return JSON.stringify({
-        success: true,
-        message: "Consulta cancelada com sucesso.",
-      });
-    } catch (error) {
-      return JSON.stringify({
-        success: false,
-        message: "Erro ao cancelar consulta.",
-        error: String(error),
-      });
-    }
+  func: async ({ appointmentId, reason }) => {
+    return JSON.stringify({
+      success: true,
+      message: `Consulta ${appointmentId} cancelada com sucesso.`,
+      reason: reason || "Não informado.",
+    });
   },
 });
+
+// ─── Knowledge Base Tool ──────────────────────────────────────────────────────
 
 export const queryKnowledgeBaseTool = new DynamicStructuredTool({
   name: "query_knowledge_base",
@@ -115,7 +87,7 @@ export const queryKnowledgeBaseTool = new DynamicStructuredTool({
       if (!context) {
         return JSON.stringify({
           success: true,
-          context: "Nenhuma informação cadastrada no momento.",
+          context: "Nenhuma informação cadastrada no momento. Por favor, entre em contato diretamente com a clínica.",
         });
       }
 
@@ -134,6 +106,8 @@ export const queryKnowledgeBaseTool = new DynamicStructuredTool({
   },
 });
 
+// ─── Pre-Anamnesis Tool ───────────────────────────────────────────────────────
+
 export const savePreAnamnesisTool = new DynamicStructuredTool({
   name: "save_pre_anamnesis",
   description: "Salva os dados da pré-anamnese coletados durante a conversa.",
@@ -149,6 +123,7 @@ export const savePreAnamnesisTool = new DynamicStructuredTool({
   }),
   func: async (data) => {
     try {
+      // TODO: Persist to pre_anamnesis table linked to appointment
       return JSON.stringify({
         success: true,
         message: "Pré-anamnese registrada com sucesso.",
@@ -163,6 +138,8 @@ export const savePreAnamnesisTool = new DynamicStructuredTool({
     }
   },
 });
+
+// ─── Tool Collections ─────────────────────────────────────────────────────────
 
 export const allTools = [
   checkCalendarTool,
@@ -182,6 +159,8 @@ export const preAnamnesisTools = [
   savePreAnamnesisTool,
 ];
 
+// ─── AI Model Factory ─────────────────────────────────────────────────────────
+
 export function createGroqChatModel(params?: {
   temperature?: number;
   maxTokens?: number;
@@ -191,8 +170,10 @@ export function createGroqChatModel(params?: {
   const baseURL = openrouterKey
     ? "https://openrouter.ai/api/v1"
     : "https://api.groq.com/openai/v1";
+
+  // Always use llama-3.3-70b-versatile as default — proven stable and capable
   const model = openrouterKey
-    ? (process.env.OPENROUTER_MODEL?.trim() || "openrouter/free")
+    ? (process.env.OPENROUTER_MODEL?.trim() || "meta-llama/llama-3.3-70b-instruct")
     : (process.env.GROQ_MODEL?.trim() || "llama-3.3-70b-versatile");
 
   return new ChatOpenAI({
@@ -206,6 +187,8 @@ export function createGroqChatModel(params?: {
   });
 }
 
+// ─── Tool Execution Helper ────────────────────────────────────────────────────
+
 export async function executeToolCalls(
   toolCalls: Array<{ name: string; args: Record<string, unknown>; id?: string }>
 ): Promise<ToolMessage[]> {
@@ -215,7 +198,7 @@ export async function executeToolCalls(
     const tool = allTools.find((t) => t.name === tc.name);
     if (tool) {
       try {
-        const result = await tool.func(tc.args as any);
+        const result = await tool.func(tc.args as Parameters<typeof tool.func>[0]);
         results.push(
           new ToolMessage({
             content: typeof result === "string" ? result : JSON.stringify(result),

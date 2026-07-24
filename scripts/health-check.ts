@@ -35,43 +35,18 @@ async function main() {
     "DIRECT_URL",
     "GROQ_API_KEY",
   ];
-  const stripeEnvVars = [
-    "STRIPE_SECRET_KEY",
-    "STRIPE_WEBHOOK_SECRET",
-    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
-  ];
-  const googleEnvVars = [
-    "GOOGLE_CALENDAR_CLIENT_EMAIL",
-    "GOOGLE_CALENDAR_PRIVATE_KEY",
-    "GOOGLE_CALENDAR_ID",
-  ];
-
   const sentryEnvVars = [
     "SENTRY_DSN",
     "NEXT_PUBLIC_SENTRY_DSN",
   ];
 
   const missingRequired = requiredEnvVars.filter((v) => !process.env[v]);
-  const missingStripe = stripeEnvVars.filter((v) => !process.env[v]);
-  const missingGoogle = googleEnvVars.filter((v) => !process.env[v]);
   const missingSentry = sentryEnvVars.filter((v) => !process.env[v]);
 
   if (missingRequired.length === 0) {
     ok("Env vars (required)", "All required vars are set");
   } else {
     critical(`Env vars (required): ${missingRequired.join(", ")}`, `Missing: ${missingRequired.join(", ")}`);
-  }
-
-  if (missingStripe.length === 0) {
-    ok("Env vars (Stripe)", "All Stripe vars are set");
-  } else {
-    warn(`Env vars (Stripe): ${missingStripe.join(", ")}`, `Missing: ${missingStripe.join(", ")}`);
-  }
-
-  if (missingGoogle.length === 0) {
-    ok("Env vars (Google)", "All Google vars are set");
-  } else {
-    warn(`Env vars (Google): ${missingGoogle.join(", ")}`, `Missing: ${missingGoogle.join(", ")}`);
   }
 
   if (missingSentry.length === 0) {
@@ -122,7 +97,7 @@ async function main() {
   // ── 4. Expected tables ───────────────────────────────────────────────────
   const expectedTables = [
     "users", "clinics", "professionals", "appointments",
-    "admin_users", "pricing_plans", "chat_sessions", "chat_messages",
+    "admin_users", "chat_sessions", "chat_messages",
   ];
   try {
     const { db } = await import("@/db");
@@ -142,45 +117,7 @@ async function main() {
     error("Tables", `Cannot check: ${e.message}`);
   }
 
-  // ── 5. Pricing plans ─────────────────────────────────────────────────────
-  try {
-    const { db } = await import("@/db");
-    const { pricingPlans } = await import("@/db/schema");
-    const { sql } = await import("drizzle-orm");
-    const plans = await db.select().from(pricingPlans);
-    if (plans.length >= 3) {
-      const hasStripeIds = plans.every(
-        (p) => p.stripeProductId && p.stripePriceIdMonthly
-      );
-      if (hasStripeIds) {
-        ok("Pricing plans", `${plans.length} plans with Stripe IDs`);
-      } else {
-        warn(
-          "Pricing plans",
-          `${plans.length} plans found, but some missing Stripe IDs — run pnpm seed-stripe-products`,
-          async () => {
-            const { execSync } = await import("child_process");
-            execSync("pnpm seed-stripe-products", { stdio: "inherit", cwd: resolve(__dirname, "..") });
-            return true;
-          }
-        );
-      }
-    } else {
-      warn(
-        "Pricing plans",
-        `Only ${plans.length} plans found — run pnpm seed-plans`,
-        async () => {
-          const { execSync } = await import("child_process");
-          execSync("pnpm seed-plans", { stdio: "inherit", cwd: resolve(__dirname, "..") });
-          return true;
-        }
-      );
-    }
-  } catch (e: any) {
-    error("Pricing plans", `Cannot check: ${e.message}`);
-  }
-
-  // ── 6. Admin user ────────────────────────────────────────────────────────
+  // ── 5. Admin user ────────────────────────────────────────────────────────
   try {
     const { db } = await import("@/db");
     const { adminUsers } = await import("@/db/schema");
@@ -193,6 +130,7 @@ async function main() {
         "No admin found — run pnpm seed-admin",
         async () => {
           const { execSync } = await import("child_process");
+          const { resolve } = await import("path");
           execSync("pnpm seed-admin", { stdio: "inherit", cwd: resolve(__dirname, "..") });
           return true;
         }
@@ -202,7 +140,7 @@ async function main() {
     error("Admin users", `Cannot check: ${e.message}`);
   }
 
-  // ── 7. Vercel deploy status ──────────────────────────────────────────────
+  // ── 6. Vercel deploy status ──────────────────────────────────────────────
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://medbook-amber.vercel.app";
   try {
     const resp = await fetch(`${appUrl}/api/health`);
@@ -214,17 +152,6 @@ async function main() {
     }
   } catch (e: any) {
     error("Deploy", `Cannot reach ${appUrl}: ${e.message}`);
-  }
-
-  // ── 8. Stripe connectivity ───────────────────────────────────────────────
-  try {
-    const { getStripe } = await import("@/lib/stripe");
-    const stripe = getStripe();
-    const balance = await stripe.balance.retrieve();
-    const hasFunds = balance.available.some((b: any) => b.amount > 0);
-    ok("Stripe", `Connected (balance: ${hasFunds ? "funded" : "empty test mode"})`);
-  } catch (e: any) {
-    error("Stripe", `Cannot connect: ${e.message}`);
   }
 
   // ── Summary ──────────────────────────────────────────────────────────────

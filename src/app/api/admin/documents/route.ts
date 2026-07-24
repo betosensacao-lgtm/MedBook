@@ -3,6 +3,7 @@ import { verifySessionToken, COOKIE_NAME } from "@/lib/auth";
 import { parseDocument, chunkText } from "@/lib/documents/parser";
 import { db } from "@/db";
 import { documents } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = [
@@ -74,13 +75,13 @@ export async function POST(request: NextRequest) {
         clinicId,
         name: file.name.replace(/\.[^/.]+$/, ""),
         fileName: file.name,
-        fileType: file.type,
+        fileType: file.type || "text/plain",
         fileSize: file.size,
         content,
         chunkCount: chunks.length,
         status: "ready",
         uploadedBy: session.userId,
-      })
+      } as any)
       .returning({ id: documents.id });
 
     return NextResponse.json({
@@ -129,7 +130,7 @@ export async function GET(request: NextRequest) {
         createdAt: documents.createdAt,
       })
       .from(documents)
-      .where(documents.clinicId === clinicId ? undefined : undefined);
+      .where(eq(documents.clinicId, clinicId));
 
     return NextResponse.json({ documents: docs });
   } catch (error) {

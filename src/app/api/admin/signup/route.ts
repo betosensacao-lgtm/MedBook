@@ -58,7 +58,6 @@ export async function POST(request: NextRequest) {
     }
 
     const passwordHash = await hashPassword(password);
-    const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
 
     const result = await db.transaction(async (tx) => {
       const [user] = await tx
@@ -68,7 +67,7 @@ export async function POST(request: NextRequest) {
           name,
           role: "clinic_admin",
           supabaseId: crypto.randomUUID(),
-        })
+        } as any)
         .returning();
 
       const [clinic] = await tx
@@ -80,8 +79,7 @@ export async function POST(request: NextRequest) {
           phone: clinicPhone,
           email: email.toLowerCase().trim(),
           ownerId: user.id,
-          trialEndsAt,
-        })
+        } as any)
         .returning();
 
       const [admin] = await tx
@@ -92,7 +90,7 @@ export async function POST(request: NextRequest) {
           name,
           role: "admin",
           clinicId: clinic.id,
-        })
+        } as any)
         .returning();
 
       return { user, clinic, admin };

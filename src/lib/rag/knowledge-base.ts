@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { clinicContext } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export interface ContextEntry {
   id: string;
@@ -32,18 +32,20 @@ export async function upsertContextEntry(
     .select({ id: clinicContext.id })
     .from(clinicContext)
     .where(
-      eq(clinicContext.clinicId, clinicId) &&
-      eq(clinicContext.key, key)
+      and(
+        eq(clinicContext.clinicId, clinicId),
+        eq(clinicContext.key, key)
+      )
     )
     .limit(1);
 
   if (existing.length > 0) {
     await db
       .update(clinicContext)
-      .set({ content, updatedAt: new Date() })
+      .set({ content, updatedAt: new Date() } as any)
       .where(eq(clinicContext.id, existing[0].id));
   } else {
-    await db.insert(clinicContext).values({ clinicId, key, content });
+    await db.insert(clinicContext).values({ clinicId, key, content } as any);
   }
 }
 

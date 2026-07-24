@@ -62,7 +62,7 @@ export async function createResetToken(userId: string): Promise<string> {
     userId,
     tokenHash,
     expiresAt,
-  });
+  } as any);
 
   return rawToken;
 }
@@ -90,7 +90,7 @@ export async function markTokenUsed(token: string): Promise<void> {
   const tokenHash = hashToken(token);
   await db
     .update(passwordResetTokens)
-    .set({ used: true })
+    .set({ used: true } as any)
     .where(eq(passwordResetTokens.tokenHash, tokenHash));
 }
 
@@ -117,14 +117,14 @@ export async function getAdminById(id: string) {
 export async function updateLastLogin(userId: string) {
   await db
     .update(adminUsers)
-    .set({ lastLoginAt: new Date() })
+    .set({ lastLoginAt: new Date() } as any)
     .where(eq(adminUsers.id, userId));
 }
 
 export async function updatePassword(userId: string, newPasswordHash: string) {
   await db
     .update(adminUsers)
-    .set({ passwordHash: newPasswordHash, updatedAt: new Date() })
+    .set({ passwordHash: newPasswordHash, updatedAt: new Date() } as any)
     .where(eq(adminUsers.id, userId));
 }
 

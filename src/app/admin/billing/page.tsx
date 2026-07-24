@@ -1,295 +1,185 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { MessageSquare, CheckCircle2, ExternalLink, Info } from "lucide-react";
 
-interface Plan {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  priceMonthly: number;
-  priceYearly: number | null;
-  maxProfessionals: number | null;
-  maxConversationsMonthly: number | null;
-  features: string[];
-  highlighted: boolean;
-}
+const steps = [
+  {
+    title: "Create a Meta App",
+    description: "Go to Meta Business Manager and create a new App with WhatsApp product enabled.",
+    link: "https://developers.facebook.com/apps/",
+    linkText: "Open Meta Developers",
+  },
+  {
+    title: "Get your Credentials",
+    description:
+      "After creating the app, copy the Phone Number ID, Access Token, and App Secret from the WhatsApp > API Setup section.",
+    link: "https://developers.facebook.com/docs/whatsapp/cloud-api/get-started",
+    linkText: "Setup Guide",
+  },
+  {
+    title: "Configure the Webhook",
+    description:
+      "In Webhooks settings, point Meta to your deployment URL. The endpoint is /api/webhook. Use your WHATSAPP_VERIFY_TOKEN as the Verify Token.",
+    link: "https://developers.facebook.com/docs/graph-api/webhooks",
+    linkText: "Webhook Docs",
+  },
+  {
+    title: "Set Environment Variables",
+    description:
+      "Add WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_ACCESS_TOKEN, WHATSAPP_VERIFY_TOKEN, WHATSAPP_API_URL, and META_APP_SECRET to your .env.local and Vercel project settings.",
+    link: null,
+    linkText: null,
+  },
+  {
+    title: "Test the Integration",
+    description:
+      "Use the Meta test number to send a WhatsApp message to your webhook endpoint. The MedBook AI agent will respond automatically.",
+    link: null,
+    linkText: null,
+  },
+];
 
-interface ClinicBilling {
-  id: string;
-  name: string;
-  planId: string | null;
-  planName: string | null;
-  planSlug: string | null;
-  planPrice: number | null;
-  planFeatures: string[] | null;
-  planMaxConversations: number | null;
-  billingCycle: string | null;
-  trialEndsAt: string | null;
-  conversationsUsedMonthly: number;
-  subscriptionStatus: string | null;
-  stripeCustomerId: string | null;
-}
+export default function WhatsAppIntegrationPage() {
+  const [checkedSteps, setCheckedSteps] = useState<Set<number>>(new Set());
 
-function formatPrice(cents: number) {
-  return `R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;
-}
-
-function formatDate(dateStr: string | null) {
-  if (!dateStr) return "-";
-  return new Date(dateStr).toLocaleDateString("pt-BR");
-}
-
-export default function BillingPage() {
-  const router = useRouter();
-  const [clinic, setClinic] = useState<ClinicBilling | null>(null);
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [portalLoading, setPortalLoading] = useState(false);
-
-  const loadData = useCallback(async () => {
-    try {
-      const [meRes, clinicRes, plansRes] = await Promise.all([
-        fetch("/api/admin/me"),
-        fetch("/api/admin/clinics"),
-        fetch("/api/admin/plans"),
-      ]);
-
-      const me = await meRes.json();
-      const clinicsData = Array.isArray(clinicRes) ? await clinicRes.json() : await clinicRes.json();
-      const plansData = Array.isArray(plansRes) ? await plansRes.json() : await plansRes.json();
-
-      const allClinics = Array.isArray(clinicsData) ? clinicsData : clinicsData.clinics || [];
-      const allPlans = Array.isArray(plansData) ? plansData : plansData.plans || [];
-
-      setPlans(allPlans);
-
-      const myClinicId = me.user?.clinicId;
-      const found = myClinicId
-        ? allClinics.find((c: any) => c.id === myClinicId)
-        : allClinics[0];
-
-      if (found) setClinic(found);
-    } catch (err) {
-      console.error("Failed to load billing data", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { loadData(); }, [loadData]);
-
-  async function handleSubscribe(planId: string, billingCycle: string) {
-    setCheckoutLoading(true);
-    try {
-      const res = await fetch("/api/stripe/create-checkout-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId, billingCycle }),
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert(data.error || "Erro ao criar sessao de checkout");
-      }
-    } catch {
-      alert("Erro ao conectar");
-    } finally {
-      setCheckoutLoading(false);
-    }
-  }
-
-  async function handlePortal() {
-    setPortalLoading(true);
-    try {
-      const res = await fetch("/api/stripe/create-portal-session", {
-        method: "POST",
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert(data.error || "Erro ao acessar portal");
-      }
-    } catch {
-      alert("Erro ao conectar");
-    } finally {
-      setPortalLoading(false);
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="w-8 h-8 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  const statusLabels: Record<string, { label: string; color: string }> = {
-    active: { label: "Ativa", color: "text-green-600 bg-green-50 border-green-200" },
-    past_due: { label: "Pagamento Pendente", color: "text-yellow-600 bg-yellow-50 border-yellow-200" },
-    canceled: { label: "Cancelada", color: "text-red-600 bg-red-50 border-red-200" },
-    incomplete: { label: "Incompleta", color: "text-orange-600 bg-orange-50 border-orange-200" },
-    trialing: { label: "Trial", color: "text-blue-600 bg-blue-50 border-blue-200" },
-  };
-
-  const subStatus = clinic?.subscriptionStatus
-    ? statusLabels[clinic.subscriptionStatus] || { label: clinic.subscriptionStatus, color: "text-gray-600 bg-gray-50 border-gray-200" }
-    : null;
+  const toggle = (i: number) =>
+    setCheckedSteps((prev) => {
+      const next = new Set(prev);
+      next.has(i) ? next.delete(i) : next.add(i);
+      return next;
+    });
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Faturamento</h1>
-        <p className="text-gray-500 mt-1">Gerencie sua assinatura e plano</p>
+    <div className="max-w-3xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="flex items-start gap-4">
+        <div className="w-12 h-12 rounded-2xl bg-green-500/10 flex items-center justify-center flex-shrink-0">
+          <MessageSquare className="w-6 h-6 text-green-500" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">WhatsApp Business Integration</h1>
+          <p className="text-gray-500 mt-1">
+            Connect MedBook to WhatsApp so your AI agent can triage patients and schedule appointments
+            directly through messaging.
+          </p>
+        </div>
       </div>
 
-      {clinic ? (
-        <>
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Plano Atual</h2>
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-xl font-bold text-gray-900">
-                    {clinic.planName || "Sem plano"}
-                  </span>
-                  {subStatus && (
-                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${subStatus.color}`}>
-                      {subStatus.label}
-                    </span>
+      {/* Status Banner */}
+      <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-2xl p-5">
+        <Info className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-semibold text-blue-800">Ready for Integration</p>
+          <p className="text-sm text-blue-600 mt-1">
+            The WhatsApp webhook endpoint is already built and deployed at{" "}
+            <code className="bg-blue-100 px-1.5 py-0.5 rounded text-xs font-mono">/api/webhook</code>.
+            Follow the steps below to connect your Meta Business account.
+          </p>
+        </div>
+      </div>
+
+      {/* What It Does */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+        <h2 className="font-semibold text-gray-900 mb-4">What the WhatsApp Agent Does</h2>
+        <div className="space-y-3">
+          {[
+            "Receives patient messages via WhatsApp Business API",
+            "Routes conversations: triage, scheduling, pre-anamnesis, or FAQ",
+            "Conducts AI-powered medical triage and urgency classification",
+            "Books, confirms, and cancels appointments conversationally",
+            "Collects patient pre-anamnesis data before the consultation",
+            "Answers clinic-specific questions using the knowledge base",
+          ].map((item) => (
+            <div key={item} className="flex items-start gap-2.5 text-sm text-gray-600">
+              <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+              {item}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Setup Steps */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+        <h2 className="font-semibold text-gray-900 mb-6">Setup Checklist</h2>
+        <div className="space-y-4">
+          {steps.map((step, i) => {
+            const done = checkedSteps.has(i);
+            return (
+              <div
+                key={i}
+                className={`relative flex gap-4 p-4 rounded-xl border transition-all cursor-pointer ${
+                  done
+                    ? "border-green-200 bg-green-50"
+                    : "border-gray-100 bg-gray-50 hover:border-gray-200"
+                }`}
+                onClick={() => toggle(i)}
+              >
+                <div
+                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${
+                    done ? "border-green-500 bg-green-500" : "border-gray-300"
+                  }`}
+                >
+                  {done && (
+                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
                   )}
                 </div>
-                {clinic.planPrice ? (
-                  <p className="text-sm text-gray-500">
-                    {formatPrice(clinic.planPrice)}/{clinic.billingCycle === "yearly" ? "ano" : "mês"}
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-semibold ${done ? "text-green-800 line-through opacity-60" : "text-gray-900"}`}>
+                    Step {i + 1}: {step.title}
                   </p>
-                ) : (
-                  <p className="text-sm text-gray-500">Clinica em modo gratuito</p>
-                )}
-                {clinic.trialEndsAt && new Date(clinic.trialEndsAt) > new Date() && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    Periodo de teste ate {formatDate(clinic.trialEndsAt)}
-                  </p>
-                )}
-              </div>
-
-              {clinic.stripeCustomerId ? (
-                <button
-                  onClick={handlePortal}
-                  disabled={portalLoading}
-                  className="px-4 py-2 text-sm font-medium text-teal-600 border border-teal-200 rounded-xl hover:bg-teal-50 disabled:opacity-50 transition-colors"
-                >
-                  {portalLoading ? "Abrindo..." : "Gerenciar Assinatura"}
-                </button>
-              ) : null}
-            </div>
-
-            {clinic.planFeatures && clinic.planFeatures.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-                  Funcionalidades
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {clinic.planFeatures.map((f, i) => (
-                    <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
-                      <svg className="w-4 h-4 text-green-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                      {f}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {clinic.planMaxConversations && (
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-                  Uso de Conversas
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 bg-gray-100 rounded-full h-2">
-                    <div
-                      className="bg-teal-500 h-2 rounded-full transition-all"
-                      style={{
-                        width: `${Math.min(
-                          (clinic.conversationsUsedMonthly / clinic.planMaxConversations) * 100,
-                          100
-                        )}%`,
-                      }}
-                    />
-                  </div>
-                  <span className="text-sm text-gray-500">
-                    {clinic.conversationsUsedMonthly}/{clinic.planMaxConversations}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Mudar de Plano</h2>
-            <div className="grid md:grid-cols-3 gap-4">
-              {plans.map((plan) => {
-                const isCurrentPlan = clinic.planId === plan.id;
-                return (
-                  <div
-                    key={plan.id}
-                    className={`bg-white rounded-2xl border p-5 ${
-                      isCurrentPlan
-                        ? "border-teal-300 ring-1 ring-teal-300"
-                        : "border-gray-200"
-                    }`}
-                  >
-                    <h3 className="font-semibold text-gray-900">{plan.name}</h3>
-                    <p className="text-2xl font-bold text-gray-900 mt-2">
-                      {formatPrice(plan.priceMonthly)}
-                      <span className="text-sm font-normal text-gray-500">/mês</span>
-                    </p>
-                    <ul className="mt-3 space-y-1.5">
-                      {plan.features.slice(0, 3).map((f) => (
-                        <li key={f} className="text-xs text-gray-500 flex items-center gap-1.5">
-                          <svg className="w-3 h-3 text-green-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                          {f}
-                        </li>
-                      ))}
-                      {plan.features.length > 3 && (
-                        <li className="text-xs text-gray-400">+{plan.features.length - 3} mais</li>
-                      )}
-                    </ul>
-                    <button
-                      onClick={() => handleSubscribe(plan.id, "monthly")}
-                      disabled={isCurrentPlan || checkoutLoading}
-                      className={`w-full mt-4 px-4 py-2.5 text-sm font-medium rounded-xl transition-all ${
-                        isCurrentPlan
-                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                          : "bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50"
-                      }`}
+                  <p className="text-sm text-gray-500 mt-1">{step.description}</p>
+                  {step.link && (
+                    <a
+                      href={step.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1.5 text-xs text-teal-600 font-medium mt-2 hover:text-teal-700"
                     >
-                      {isCurrentPlan
-                        ? "Plano Atual"
-                        : checkoutLoading
-                        ? "Abrindo..."
-                        : "Assinar"}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </>
-      ) : (
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 text-center">
-          <p className="text-gray-500">Nenhuma clinica encontrada.</p>
+                      {step.linkText}
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
-      )}
+        <div className="mt-4 pt-4 border-t border-gray-100 text-center">
+          <p className="text-xs text-gray-400">
+            {checkedSteps.size}/{steps.length} steps completed
+          </p>
+          <div className="mt-2 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-green-500 rounded-full transition-all duration-500"
+              style={{ width: `${(checkedSteps.size / steps.length) * 100}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Required Variables */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+        <h2 className="font-semibold text-gray-900 mb-4">Required Environment Variables</h2>
+        <div className="space-y-2">
+          {[
+            { key: "WHATSAPP_API_URL", value: "https://graph.facebook.com/v21.0" },
+            { key: "WHATSAPP_PHONE_NUMBER_ID", value: "From Meta App Settings" },
+            { key: "WHATSAPP_ACCESS_TOKEN", value: "From Meta App Settings" },
+            { key: "WHATSAPP_VERIFY_TOKEN", value: "Custom string you define" },
+            { key: "WHATSAPP_BUSINESS_ACCOUNT_ID", value: "From Meta Business Manager" },
+            { key: "META_APP_SECRET", value: "From Meta App Settings" },
+          ].map(({ key, value }) => (
+            <div key={key} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+              <code className="text-xs font-mono text-gray-700 bg-gray-100 px-2 py-1 rounded">{key}</code>
+              <span className="text-xs text-gray-400 ml-4 text-right">{value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
         name,
         role: role || "admin",
         clinicId: clinicId || null,
-      })
+      } as any)
       .returning({ id: adminUsers.id });
 
     return NextResponse.json({

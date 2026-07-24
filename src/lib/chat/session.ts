@@ -19,7 +19,7 @@ export async function getOrCreateSession(sessionId: string, clinicId?: string): 
 
   if (existing.length > 0) return existing[0].id;
 
-  await db.insert(chatSessions).values({ sessionId, clinicId });
+  await db.insert(chatSessions).values({ sessionId, clinicId } as any);
   return sessionId;
 }
 
@@ -36,5 +36,5 @@ export async function saveChatMessage(
   role: "user" | "assistant",
   content: string
 ): Promise<void> {
-  await db.insert(chatMessages).values({ sessionId, role, content });
+  await db.insert(chatMessages).values({ sessionId, role, content } as any);
 }

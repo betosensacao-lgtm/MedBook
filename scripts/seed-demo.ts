@@ -189,7 +189,7 @@ async function main() {
         patientEmail: patient.email,
         createdAt: sessionTime,
         updatedAt: sessionTime,
-      })
+      } as any)
       .returning({ id: chatSessions.id, sessionId: chatSessions.sessionId });
 
     console.log(`  Creating session: ${patient.name} (${daysAgo}d ago)`);
@@ -204,7 +204,7 @@ async function main() {
         role: msg.role,
         content: msg.content,
         createdAt: msgTime,
-      });
+      } as any);
     }
   }
 

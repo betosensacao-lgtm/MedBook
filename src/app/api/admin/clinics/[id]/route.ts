@@ -14,8 +14,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const allowedFields = [
       "name", "slug", "specialty", "description", "phone", "email",
       "city", "state", "street", "addressNumber", "complement", "neighborhood", "zipCode",
-      "isVerified", "planId", "plan", "billingCycle", "trialEndsAt",
-      "logoUrl", "coverUrl",
+      "isVerified", "logoUrl", "coverUrl",
     ];
 
     const updates: Record<string, any> = {};
@@ -35,7 +34,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       .update(clinics)
       .set(updates)
       .where(eq(clinics.id, id))
-      .returning({ id: clinics.id, name: clinics.name, planId: clinics.planId });
+      .returning({ id: clinics.id, name: clinics.name });
 
     return NextResponse.json(updated);
   } catch (error) {

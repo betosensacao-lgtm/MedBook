@@ -1,19 +1,13 @@
 import { db } from "@/db";
-import { adminUsers, clinics, chatSessions, chatMessages, documents, pricingPlans } from "@/db/schema";
-import { eq, sql, desc, asc, gte } from "drizzle-orm";
+import { adminUsers, clinics, chatSessions, chatMessages, documents } from "@/db/schema";
+import { sql, desc, gte } from "drizzle-orm";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { ClinicActions } from "./ClinicActions";
 import { ClinicsTable } from "./ClinicsTable";
 
 export const dynamic = "force-dynamic";
-
-function formatPrice(cents: number | null) {
-  if (!cents) return "—";
-  return `R$ ${(cents / 100).toFixed(0)}`;
-}
 
 export default async function SuperAdminPage() {
   const [userCount] = await db
@@ -43,7 +37,7 @@ export default async function SuperAdminPage() {
     .from(chatSessions)
     .where(gte(chatSessions.createdAt, today));
 
-  // All clinics with pricing plan info
+  // All clinics
   const allClinics = await db
     .select({
       id: clinics.id,
@@ -55,24 +49,9 @@ export default async function SuperAdminPage() {
       city: clinics.city,
       state: clinics.state,
       isVerified: clinics.isVerified,
-      billingCycle: clinics.billingCycle,
-      trialEndsAt: clinics.trialEndsAt,
-      conversationsUsedMonthly: clinics.conversationsUsedMonthly,
-      plan: clinics.plan,
-      subscriptionStatus: clinics.subscriptionStatus,
       createdAt: clinics.createdAt,
-      // Plan join
-      planId: clinics.planId,
-      planName: pricingPlans.name,
-      planSlug: pricingPlans.slug,
-      planPrice: pricingPlans.priceMonthly,
-      planMaxProfs: pricingPlans.maxProfessionals,
-      planMaxConversations: pricingPlans.maxConversationsMonthly,
-      planFeatures: pricingPlans.features,
-      planHighlighted: pricingPlans.highlighted,
     })
     .from(clinics)
-    .leftJoin(pricingPlans, eq(clinics.planId, pricingPlans.id))
     .orderBy(desc(clinics.createdAt));
 
   // All users
@@ -90,22 +69,6 @@ export default async function SuperAdminPage() {
     .from(adminUsers)
     .orderBy(adminUsers.createdAt);
 
-  // Plan distribution
-  const planStats = await db
-    .select({
-      name: pricingPlans.name,
-      slug: pricingPlans.slug,
-      count: sql<number>`count(*)::int`,
-    })
-    .from(clinics)
-    .leftJoin(pricingPlans, eq(clinics.planId, pricingPlans.id))
-    .groupBy(pricingPlans.name, pricingPlans.slug);
-
-  // Monthly revenue estimate
-  const revenueEstimate = allClinics.reduce((sum, c) => {
-    return sum + (c.planPrice || 0);
-  }, 0);
-
   return (
     <div className="max-w-7xl mx-auto space-y-8">
       <PageHeader
@@ -114,14 +77,13 @@ export default async function SuperAdminPage() {
       />
 
       {/* System Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
         <StatCard label="Usuarios" value={userCount.count} />
         <StatCard label="Clinicas" value={clinicCount.count} />
         <StatCard label="Conversas Hoje" value={sessionsToday.count} variant="highlight" />
         <StatCard label="Total Conversas" value={sessionCount.count} />
         <StatCard label="Mensagens" value={messageCount.count} />
         <StatCard label="Documentos" value={docCount.count} />
-        <StatCard label="Receita Mensal" value={formatPrice(revenueEstimate)} />
       </div>
 
       {/* Clinic Management */}
@@ -129,13 +91,6 @@ export default async function SuperAdminPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">Clinicas</h2>
-            <div className="flex gap-2">
-              {planStats.map((p) => (
-                <Badge key={p.slug || "none"} variant={p.slug === "enterprise" ? "purple" : p.slug === "professional" ? "info" : "default"}>
-                  {p.name || "sem plano"}: {p.count}
-                </Badge>
-              ))}
-            </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">

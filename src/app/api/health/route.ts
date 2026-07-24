@@ -91,27 +91,6 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // 5. Stripe connectivity (detailed only)
-  if (isDetailed) {
-    try {
-      const t0 = Date.now();
-      if (process.env.STRIPE_SECRET_KEY) {
-        const { getStripe } = await import("@/lib/stripe");
-        const stripe = getStripe();
-        const balance = await stripe.balance.retrieve();
-        checks.stripe = {
-          status: "ok",
-          details: `Balance: ${balance.available.map((b: any) => `${(b.amount / 100).toFixed(2)} ${b.currency}`).join(", ") || "empty"}`,
-          ms: Date.now() - t0,
-        };
-      } else {
-        checks.stripe = { status: "warning", details: "STRIPE_SECRET_KEY not set" };
-      }
-    } catch (e: any) {
-      checks.stripe = { status: "error", details: e.message };
-    }
-  }
-
   // 6. Env vars (detailed only)
   if (isDetailed) {
     const required = ["DATABASE_URL", "DIRECT_URL", "JWT_SECRET", "GROQ_API_KEY"];

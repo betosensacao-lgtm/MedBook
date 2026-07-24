@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
         patientName: null,
         patientPhone: null,
         patientEmail: null,
-      })
+      } as any)
       .where(eq(chatSessions.patientEmail, email.toLowerCase().trim()));
 
     console.log(`[LGPD Delete] Deleted ${deletedSessions} sessions and ${deletedMessages} messages for ${email}`);

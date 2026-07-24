@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Badge } from "@/components/ui/Badge";
 import { ClinicActions } from "./ClinicActions";
 
 interface Clinic {
@@ -14,33 +13,11 @@ interface Clinic {
   city: string | null;
   state: string | null;
   isVerified: boolean;
-  billingCycle: string | null;
-  conversationsUsedMonthly: number;
   createdAt: Date;
-  planId: string | null;
-  planName: string | null;
-  planSlug: string | null;
-  planPrice: number | null;
-  planMaxProfs: number | null;
-  planMaxConversations: number | null;
-  planFeatures: string[] | null;
-  planHighlighted: boolean | null;
-}
-
-function formatPrice(cents: number | null) {
-  if (!cents) return "";
-  return `R$${(cents / 100).toFixed(0)}`;
-}
-
-function getPlanBadgeVariant(slug: string | null) {
-  if (slug === "enterprise") return "purple";
-  if (slug === "professional") return "info";
-  if (slug === "starter") return "warning";
-  return "default";
 }
 
 export function ClinicsTable({ clinics: initialClinics }: { clinics: Clinic[] }) {
-  const [clinics, setClinics] = useState(initialClinics);
+  const [clinics] = useState(initialClinics);
 
   const handleUpdated = useCallback(() => {
     window.location.reload();
@@ -52,10 +29,8 @@ export function ClinicsTable({ clinics: initialClinics }: { clinics: Clinic[] })
         <thead>
           <tr className="border-b border-gray-100 text-gray-500 text-xs uppercase tracking-wider">
             <th className="text-left px-5 py-3 font-medium">Nome</th>
+            <th className="text-left px-5 py-3 font-medium">Especialidade</th>
             <th className="text-left px-5 py-3 font-medium">Local</th>
-            <th className="text-center px-5 py-3 font-medium">Plano</th>
-            <th className="text-center px-5 py-3 font-medium">Valor</th>
-            <th className="text-center px-5 py-3 font-medium">Conversas</th>
             <th className="text-center px-5 py-3 font-medium">Verif</th>
             <th className="text-right px-5 py-3 font-medium">Criada em</th>
             <th className="text-right px-5 py-3 font-medium">Acoes</th>
@@ -70,21 +45,11 @@ export function ClinicsTable({ clinics: initialClinics }: { clinics: Clinic[] })
                   <p className="text-xs text-gray-400">/{c.slug}</p>
                 </div>
               </td>
+              <td className="px-5 py-3 text-gray-600 text-xs">
+                {c.specialty}
+              </td>
               <td className="px-5 py-3 text-gray-500 text-xs">
                 {[c.city, c.state].filter(Boolean).join(", ") || "—"}
-              </td>
-              <td className="px-5 py-3 text-center">
-                <Badge variant={getPlanBadgeVariant(c.planSlug)}>
-                  {c.planName || "Free"}
-                </Badge>
-              </td>
-              <td className="px-5 py-3 text-center text-gray-700 font-medium text-xs">
-                {c.planPrice ? formatPrice(c.planPrice) + "/mes" : "—"}
-              </td>
-              <td className="px-5 py-3 text-center text-xs text-gray-500">
-                {c.planMaxConversations
-                  ? `${c.conversationsUsedMonthly}/${c.planMaxConversations}`
-                  : c.planId ? "Ilimitado" : "—"}
               </td>
               <td className="px-5 py-3 text-center">
                 {c.isVerified ? (

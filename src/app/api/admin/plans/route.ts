@@ -1,21 +1,9 @@
-import { db } from "@/db";
-import { pricingPlans } from "@/db/schema";
-import { asc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/admin/plans — list all pricing plans
+// GET /api/admin/plans — MedBook no longer uses subscription plans
+// This endpoint returns an empty array for backwards compatibility
 export async function GET() {
-  try {
-    const plans = await db
-      .select()
-      .from(pricingPlans)
-      .orderBy(asc(pricingPlans.sortOrder));
-
-    return NextResponse.json(plans);
-  } catch (error) {
-    console.error("[Plans API] Error:", error);
-    return NextResponse.json({ error: "Erro ao buscar planos" }, { status: 500 });
-  }
+  return NextResponse.json([]);
 }

@@ -11,7 +11,7 @@ import postgres from "postgres";
 import bcrypt from "bcryptjs";
 import { drizzle } from "drizzle-orm/postgres-js";
 import * as schema from "../src/db/schema";
-import { adminUsers, clinics } from "../src/db/schema";
+import { adminUsers } from "../src/db/schema";
 import { eq } from "drizzle-orm";
 
 config({ path: resolve(__dirname, "../.env.local") });
@@ -51,7 +51,7 @@ async function main() {
       name: "Administrador",
       role: "super_admin",
       clinicId: clinicId || null,
-    });
+    } as any);
     console.log(`Admin user created: ${email}`);
   }
 

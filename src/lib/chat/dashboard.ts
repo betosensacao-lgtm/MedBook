@@ -17,7 +17,7 @@ export interface DashboardStats {
   }>;
 }
 
-export async function getDashboardStats(): Promise<DashboardStats> {
+export async function getDashboardStats(_clinicId?: string): Promise<DashboardStats> {
   const allSessions = await db.select().from(chatSessions);
   const allMessages = await db.select().from(chatMessages);
 
