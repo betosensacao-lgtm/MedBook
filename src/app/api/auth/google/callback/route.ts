@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { getTokensFromCode } from "@/lib/google";
 import { googleConnections } from "@/db/schema";
 import { db } from "@/db";
+import { verifySessionToken, COOKIE_NAME } from "@/lib/auth";
 
 export async function GET(request: Request) {
   try {
@@ -19,10 +20,18 @@ export async function GET(request: Request) {
       return NextResponse.redirect(new URL("/admin?google=no_code", request.url));
     }
 
-    const tokens = await getTokensFromCode(code);
+    const cookie = request.headers.get("cookie")?.split(";").find((c) => c.trim().startsWith(`${COOKIE_NAME}=`));
+    let userId = "system";
 
-    // TODO: get userId from session (Supabase Auth)
-    const userId = "system";
+    if (cookie) {
+      const token = cookie.split("=")[1];
+      const session = await verifySessionToken(token);
+      if (session) {
+        userId = session.userId;
+      }
+    }
+
+    const tokens = await getTokensFromCode(code);
 
     const existing = await db
       .select()
