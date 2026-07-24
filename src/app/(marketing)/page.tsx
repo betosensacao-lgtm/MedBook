@@ -43,7 +43,7 @@ export default function HomePage() {
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-32 text-center z-10 animate-fade-in">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-sm font-medium mb-8 animate-slide-up">
           <Workflow className="w-4 h-4 fill-current" />
-          Powered by LangGraph & n8n
+          Powered by LangGraph AI
         </div>
         
         <h1 className="font-display text-5xl md:text-7xl font-bold max-w-5xl leading-tight tracking-tight animate-slide-up" style={{ animationDelay: "100ms" }}>
@@ -54,7 +54,7 @@ export default function HomePage() {
         </h1>
         
         <p className="text-lg md:text-xl text-slate-400 max-w-3xl mt-8 leading-relaxed animate-slide-up" style={{ animationDelay: "200ms" }}>
-          O MedBook utiliza Inteligência Artificial avançada para analisar sintomas de pacientes recebidos via web, WhatsApp, ou de <strong>sistemas de saúde legados</strong> via n8n.
+          O MedBook utiliza Inteligência Artificial avançada para analisar sintomas de pacientes recebidos via web, WhatsApp, ou sistemas de saúde integrados.
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 mt-12 animate-slide-up" style={{ animationDelay: "300ms" }}>
@@ -85,8 +85,8 @@ export default function HomePage() {
             },
             {
               icon: Workflow,
-              title: "Integração Universal (n8n)",
-              desc: "Conecte CRMs legados, sistemas de email ou Zendesk diretamente ao nosso motor de Inteligência Artificial.",
+              title: "Integração Universal",
+              desc: "Conecte CRMs legados, sistemas de email ou Zendesk diretamente ao nosso motor de Inteligência Artificial via webhooks.",
               color: "text-indigo-400",
               bg: "bg-indigo-400/10"
             },
