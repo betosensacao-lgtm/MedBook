@@ -94,18 +94,17 @@ export async function doubtResolutionNode(
   }
 }
 
-const SCHEDULING_SYSTEM_PROMPT = `Você é um assistente de agendamento de consultas.
-Ajude o paciente a escolher um horário disponível e agende a consulta.
+const SCHEDULING_SYSTEM_PROMPT = `Você é o assistente virtual oficial de atendimento da clínica médica MedBook.
+Sua missão é ajudar o paciente com agendamento de consultas e esclarecimento de dúvidas.
 
-Regras:
-1. Primeiro pergunte a especialidade ou profissional desejado
-2. Depois pergunte a data preferida
-3. Use a ferramenta check_calendar para verificar disponibilidade
-4. Apresente os horários disponíveis ao paciente
-5. Quando o paciente confirmar, use create_event para agendar
+REGRAS OBRIGATÓRIAS:
+1. Sempre pergunte o NOME COMPLETO e TELEFONE do paciente caso ainda não saiba.
+2. Pergunte a data e o horário desejado para a consulta.
+3. Use a ferramenta check_calendar para verificar os horários disponíveis.
+4. Apresente os horários ao paciente.
+5. Quando o paciente confirmar a data e hora, execute OBRIGATORIAMENTE a ferramenta create_event passando patientName, patientPhone, date, time para salvar o agendamento no banco de dados.
 
-Se o paciente quiser cancelar, use cancel_event.
-Seja educado e objetivo. Responda em português.`;
+Seja muito educado, atencioso e humano. Responda em português.`;
 
 export async function schedulingNode(
   state: ChatStateType
@@ -132,37 +131,32 @@ export async function schedulingNode(
       ]);
 
       return {
-        messages: [new AIMessage(followUp.content as string || "Processado.")],
+        messages: [new AIMessage(followUp.content as string || "Consulta agendada com sucesso!")],
         completed: true,
       };
     }
 
     return {
-      messages: [new AIMessage(response.content as string || "Como posso ajudar com o agendamento?")],
+      messages: [new AIMessage(response.content as string || "Por favor, me informe seu nome, telefone e o dia/horário desejado para a consulta.")],
     };
   } catch (error) {
     return {
-      messages: [new AIMessage("Desculpe, erro ao processar agendamento. Tente novamente.")],
+      messages: [new AIMessage("Desculpe, ocorreu um erro ao verificar a agenda. Por favor, me informe seu nome e telefone para tentarmos novamente.")],
       error: String(error),
     };
   }
 }
 
-const PRE_ANAMNESE_SYSTEM_PROMPT = `Você é um assistente de pré-anamnese.
-Conduza uma entrevista para coletar as seguintes informações do paciente de forma natural e conversacional:
+const PRE_ANAMNESE_SYSTEM_PROMPT = `Você é o assistente de pré-anamnese e triagem da clínica MedBook.
+Conduza um atendimento acolhedor para entender as necessidades de saúde do paciente.
 
-1. Nome completo
-2. Telefone para contato
-3. Data de nascimento
-4. Queixa principal (motivo da consulta)
-5. Descrição dos sintomas
-6. Há quanto tempo apresenta os sintomas
-7. Medicamentos que usa atualmente
-8. Alergias
-9. Condições crônicas (diabetes, hipertensão, etc)
+PASSO A PASSO:
+1. Solicite o NOME COMPLETO e TELEFONE para cadastro do paciente.
+2. Pergunte qual a queixa principal ou quais sintomas o paciente está sentindo e há quanto tempo.
+3. Pergunte sobre medicamentos em uso, alergias ou condições de saúde.
+4. Assim que coletar a queixa/sintomas e nome, execute OBRIGATORIAMENTE a ferramenta save_pre_anamnesis para salvar no banco de dados da clínica.
 
-Faça perguntas uma de cada vez. Seja acolhedor.
-Quando tiver todos os dados, use a ferramenta save_pre_anamnesis.`;
+Alerta de Segurança: Não forneça diagnósticos nem prescreva medicamentos.`;
 
 export async function preAnamnesisNode(
   state: ChatStateType

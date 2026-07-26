@@ -17,18 +17,18 @@ export function routeAfterRouter(state: ChatStateType): NodeName {
     case "PRE_ANAMNESE":
       return "pre_anamnesis";
     default:
-      return "__end__";
+      return "doubt_resolution";
   }
 }
 
-export function routeAfterDoubt(state: ChatStateType): NodeName {
+export function routeAfterDoubt(_state: ChatStateType): NodeName {
   return "__end__";
 }
 
-export function routeAfterScheduling(state: ChatStateType): NodeName {
+export function routeAfterScheduling(_state: ChatStateType): NodeName {
   return "__end__";
 }
 
-export function routeAfterPreAnamnesis(state: ChatStateType): NodeName {
+export function routeAfterPreAnamnesis(_state: ChatStateType): NodeName {
   return "__end__";
 }
