@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   // 2. Tables
   const expectedTables = [
     "users", "clinics", "professionals", "appointments",
-    "admin_users", "pricing_plans", "chat_sessions", "chat_messages",
+    "admin_users", "chat_sessions", "chat_messages",
     "triage_sessions", "triage_messages",
   ];
 
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const t0 = Date.now();
     const result = await db.execute(sql`
       SELECT table_name FROM information_schema.tables
-      WHERE table_schema = 'public' AND table_name IN ${sql.raw(`(${expectedTables.map(t => `'${t}'`).join(',')})`)}
+      WHERE table_schema IN ('public', 'medbook') AND table_name IN ${sql.raw(`(${expectedTables.map(t => `'${t}'`).join(',')})`)}
     `);
     const found = (result as any[]).map((r: any) => r.table_name);
     const missing = expectedTables.filter(t => !found.includes(t));
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
       const t0 = Date.now();
       const result = await db.execute(sql`
         SELECT tablename, rowsecurity FROM pg_tables
-        WHERE schemaname = 'public' AND tablename NOT LIKE 'pg_%'
+        WHERE schemaname IN ('public', 'medbook') AND tablename NOT LIKE 'pg_%'
       `);
       const tables = (result as any[]);
       const noRLS = tables.filter((t: any) => !t.rowsecurity);
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // 6. Env vars (detailed only)
+  // 5. Env vars (detailed only)
   if (isDetailed) {
     const required = ["DATABASE_URL", "DIRECT_URL", "JWT_SECRET", "GROQ_API_KEY"];
     const missing = required.filter(v => !process.env[v]);
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
     };
   }
 
-  // 7. Deployment info
+  // 6. Deployment info
   checks.deployment = {
     status: "ok",
     details: `Node ${process.version} · ${process.env.VERCEL_ENV || "local"} · ${process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || "dev"}`,

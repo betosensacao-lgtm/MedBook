@@ -25,13 +25,12 @@ export const metadata: Metadata = {
     template: "%s | MedBook",
   },
   description:
-    "Chatbot com IA para clínicas. Agende consultas, tire dúvidas e atenda pacientes 24h via WhatsApp, chat web e Google Calendar.",
+    "Chatbot com IA para clínicas. Agende consultas, tire dúvidas e atende pacientes 24h via WhatsApp e chat web.",
   keywords: [
     "chatbot para clínicas",
     "agendamento online",
     "inteligência artificial saúde",
     "WhatsApp clínica",
-    "Google Calendar agendamento",
     "software para clínicas",
   ],
   authors: [{ name: "MedBook" }],
@@ -44,7 +43,7 @@ export const metadata: Metadata = {
     siteName: "MedBook",
     title: "MedBook — Atendimento Inteligente para Clínicas",
     description:
-      "Chatbot com IA que agenda consultas, tira dúvidas e atende pacientes 24h. Integração com WhatsApp e Google Calendar.",
+      "Chatbot com IA que agenda consultas, tira dúvidas e atende pacientes 24h via WhatsApp.",
     url: baseUrl,
     images: [
       {

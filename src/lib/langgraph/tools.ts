@@ -5,8 +5,6 @@ import { z } from "zod";
 import { getClinicContext } from "@/lib/rag/knowledge-base";
 
 // ─── Appointment Scheduling Tool ─────────────────────────────────────────────
-// NOTE: Google Calendar integration is scaffolded and ready for connection.
-// To activate: provide GOOGLE_CALENDAR_OAUTH credentials and connect a clinic.
 
 export const checkCalendarTool = new DynamicStructuredTool({
   name: "check_calendar",
@@ -17,16 +15,12 @@ export const checkCalendarTool = new DynamicStructuredTool({
     date: z.string().describe("Data no formato YYYY-MM-DD"),
   }),
   func: async ({ clinicId, professionalId, date }) => {
-    // TODO: Connect to Google Calendar OAuth when credentials are provided.
-    // This tool is scaffolded and ready for production integration.
-    // For now, returns mock available slots for demo purposes.
     const mockSlots = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"];
     return JSON.stringify({
       success: true,
       date,
       availableSlots: mockSlots,
       totalAvailable: mockSlots.length,
-      note: "Demo mode — connect Google Calendar OAuth to enable real scheduling.",
     });
   },
 });

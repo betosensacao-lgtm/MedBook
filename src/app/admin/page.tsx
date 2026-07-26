@@ -58,7 +58,7 @@ export default function AdminCalendarPage() {
           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
             {events.length} consulta(s) para hoje
           </span>
-          <span className="text-xs text-teal-600 font-medium">Google Calendar Sync Available</span>
+          <span className="text-xs text-teal-600 font-medium">WhatsApp Sync Ativo</span>
         </div>
 
         <div className="divide-y divide-gray-100">
