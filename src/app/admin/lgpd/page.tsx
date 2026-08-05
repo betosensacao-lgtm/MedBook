@@ -31,13 +31,13 @@ export default function LGPDPage() {
       const data = await res.json();
 
       if (res.ok) {
-        setExportMsg({ type: "success", text: data.message || "Solicitacao registrada. Os dados serao enviados por email." });
+        setExportMsg({ type: "success", text: data.message || "Request submitted. Your data will be sent by email." });
         setExportEmail("");
       } else {
-        setExportMsg({ type: "error", text: data.error || "Erro ao solicitar exportacao" });
+        setExportMsg({ type: "error", text: data.error || "Error requesting export" });
       }
     } catch {
-      setExportMsg({ type: "error", text: "Erro ao conectar" });
+      setExportMsg({ type: "error", text: "Connection error" });
     } finally {
       setExporting(false);
     }
@@ -48,8 +48,8 @@ export default function LGPDPage() {
     setDeleting(true);
     setDeleteMsg(null);
 
-    if (deleteConfirm !== "EXCLUIR") {
-      setDeleteMsg({ type: "error", text: "Digite EXCLUIR para confirmar" });
+    if (deleteConfirm !== "DELETE") {
+      setDeleteMsg({ type: "error", text: "Type DELETE to confirm" });
       setDeleting(false);
       return;
     }
@@ -63,14 +63,14 @@ export default function LGPDPage() {
       const data = await res.json();
 
       if (res.ok) {
-        setDeleteMsg({ type: "success", text: data.message || "Dados excluidos com sucesso." });
+        setDeleteMsg({ type: "success", text: data.message || "Data deleted successfully." });
         setDeleteEmail("");
         setDeleteConfirm("");
       } else {
-        setDeleteMsg({ type: "error", text: data.error || "Erro ao excluir dados" });
+        setDeleteMsg({ type: "error", text: data.error || "Error deleting data" });
       }
     } catch {
-      setDeleteMsg({ type: "error", text: "Erro ao conectar" });
+      setDeleteMsg({ type: "error", text: "Connection error" });
     } finally {
       setDeleting(false);
     }
@@ -79,51 +79,51 @@ export default function LGPDPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <PageHeader
-        title="LGPD — Privacidade"
-        description="Gerencie dados pessoais conforme a Lei Geral de Protecao de Dados"
+        title="Data Privacy"
+        description="Manage personal data in accordance with applicable data protection regulations"
       />
 
       {/* Privacy Policy Summary */}
       <Card>
         <CardHeader>
-          <h2 className="text-lg font-semibold text-gray-900">Politica de Privacidade</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Privacy Policy</h2>
         </CardHeader>
         <CardContent className="space-y-4 text-sm text-gray-600">
           <div>
-            <h3 className="font-medium text-gray-900 mb-1">1. Dados Coletados</h3>
+            <h3 className="font-medium text-gray-900 mb-1">1. Data Collected</h3>
             <p>
-              O MedBook coleta apenas os dados necessarios para o funcionamento do servico:
-              nome, telefone, email e informacoes de saude fornecidas voluntariamente pelo
-              paciente durante a conversa com o chatbot.
+              MedBook only collects the data necessary for the service to function:
+              name, phone, email, and health information voluntarily provided by the
+              patient during the conversation with the chatbot.
             </p>
           </div>
           <div>
-            <h3 className="font-medium text-gray-900 mb-1">2. Finalidade</h3>
+            <h3 className="font-medium text-gray-900 mb-1">2. Purpose</h3>
             <p>
-              Os dados sao utilizados exclusivamente para: agendamento de consultas,
-              pre-anamnese, e comunicacao entre paciente e clinica. Nao sao vendidos ou
-              compartilhados com terceiros.
+              Data is used exclusively for: appointment scheduling, pre-anamnesis, and
+              communication between patient and clinic. It is never sold or shared
+              with third parties.
             </p>
           </div>
           <div>
-            <h3 className="font-medium text-gray-900 mb-1">3. Armazenamento</h3>
+            <h3 className="font-medium text-gray-900 mb-1">3. Storage</h3>
             <p>
-              Dados armazenados no Supabase (PostgreSQL) com criptografia em transito (TLS)
-              e em repouso. Acesso restrito aos administradores da clinica.
+              Data is stored in Supabase (PostgreSQL) with encryption in transit (TLS)
+              and at rest. Access is restricted to clinic administrators.
             </p>
           </div>
           <div>
-            <h3 className="font-medium text-gray-900 mb-1">4. Direitos do Titular</h3>
+            <h3 className="font-medium text-gray-900 mb-1">4. Your Rights</h3>
             <p>
-              Conforme a LGPD (Art. 18), voce tem direito a: acesso aos dados, correcao,
-              exclusao, portabilidade, e revogacao de consentimento.
+              Under applicable data protection law, you have the right to: access your
+              data, correct it, delete it, port it, and revoke consent.
             </p>
           </div>
           <div>
-            <h3 className="font-medium text-gray-900 mb-1">5. Retencao</h3>
+            <h3 className="font-medium text-gray-900 mb-1">5. Retention</h3>
             <p>
-              Os dados sao mantidos enquanto a conta estiver ativa. Ao solicitar exclusao,
-              todos os dados pessoais serao removidos permanentemente em ate 30 dias.
+              Data is kept while the account is active. When deletion is requested,
+              all personal data will be permanently removed within 30 days.
             </p>
           </div>
         </CardContent>
@@ -133,19 +133,19 @@ export default function LGPDPage() {
         {/* Data Export */}
         <Card>
           <CardHeader>
-            <h2 className="text-lg font-semibold text-gray-900">Exportar Meus Dados</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Export My Data</h2>
             <p className="text-sm text-gray-500">
-              Solicite uma copia de todos os seus dados pessoais (Art. 18, II)
+              Request a copy of all your personal data
             </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleExport} className="space-y-4">
               <Input
-                label="Email cadastrado"
+                label="Registered email"
                 type="email"
                 value={exportEmail}
                 onChange={(e) => setExportEmail(e.target.value)}
-                placeholder="seu@email.com"
+                placeholder="your@email.com"
                 required
               />
               {exportMsg && (
@@ -158,7 +158,7 @@ export default function LGPDPage() {
                 </div>
               )}
               <Button type="submit" loading={exporting} variant="outline">
-                Solicitar Exportacao
+                Request Export
               </Button>
             </form>
           </CardContent>
@@ -168,32 +168,32 @@ export default function LGPDPage() {
         <Card className="border-red-200">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold text-red-700">Excluir Meus Dados</h2>
-              <Badge variant="danger">Irreversivel</Badge>
+              <h2 className="text-lg font-semibold text-red-700">Delete My Data</h2>
+              <Badge variant="danger">Irreversible</Badge>
             </div>
             <p className="text-sm text-gray-500">
-              Solicite a exclusao permanente de todos os seus dados (Art. 18, VI)
+              Request permanent deletion of all your data
             </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleDelete} className="space-y-4">
               <Input
-                label="Email cadastrado"
+                label="Registered email"
                 type="email"
                 value={deleteEmail}
                 onChange={(e) => setDeleteEmail(e.target.value)}
-                placeholder="seu@email.com"
+                placeholder="your@email.com"
                 required
               />
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Digite <span className="font-bold text-red-600">EXCLUIR</span> para confirmar
+                  Type <span className="font-bold text-red-600">DELETE</span> to confirm
                 </label>
                 <input
                   type="text"
                   value={deleteConfirm}
                   onChange={(e) => setDeleteConfirm(e.target.value)}
-                  placeholder="EXCLUIR"
+                  placeholder="DELETE"
                   className="w-full px-4 py-2.5 border border-red-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                 />
               </div>
@@ -210,9 +210,9 @@ export default function LGPDPage() {
                 type="submit"
                 loading={deleting}
                 variant="danger"
-                disabled={deleteConfirm !== "EXCLUIR"}
+                disabled={deleteConfirm !== "DELETE"}
               >
-                Excluir Todos os Dados
+                Delete All Data
               </Button>
             </form>
           </CardContent>
@@ -222,26 +222,26 @@ export default function LGPDPage() {
       {/* Consent Management */}
       <Card>
         <CardHeader>
-          <h2 className="text-lg font-semibold text-gray-900">Gerenciamento de Consentimento</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Consent Management</h2>
           <p className="text-sm text-gray-500">
-            Controle como seus dados sao utilizados (Art. 8, I)
+            Control how your data is used
           </p>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <ConsentItem
-              title="Armazenamento de dados para pre-anamnese"
-              description="Permitir que os dados fornecidos na pre-anamnese sejam salvos para uso na consulta"
+              title="Store data for pre-anamnesis"
+              description="Allow data provided during pre-anamnesis to be saved for use in the appointment"
               defaultChecked={true}
             />
             <ConsentItem
-              title="Comunicacao por email"
-              description="Receber lembretes de consultas e comunicacoes da clinica"
+              title="Email communication"
+              description="Receive appointment reminders and communications from the clinic"
               defaultChecked={true}
             />
             <ConsentItem
-              title="Melhoria do servico"
-              description="Permitir o uso de dados anonimizados para melhoria do chatbot"
+              title="Service improvement"
+              description="Allow the use of anonymized data to improve the chatbot"
               defaultChecked={false}
             />
           </div>
@@ -277,7 +277,7 @@ function ConsentItem({
       </div>
       <div className="flex items-center gap-2">
         {saved && (
-          <span className="text-xs text-green-600">Salvo!</span>
+          <span className="text-xs text-green-600">Saved!</span>
         )}
         <button
           type="button"

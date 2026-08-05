@@ -1,10 +1,10 @@
 # LangGraph Module - MedBook Triage & Scheduling
 
-## Visão Geral
+## Overview
 
-Este módulo implementa a orquestração do agente de IA usando **LangGraph.js**, preparando o sistema para ser um SaaS B2B ("Clinic-in-a-Box") multi-tenant.
+This module implements AI agent orchestration using **LangGraph.js**, preparing the system to be a multi-tenant B2B SaaS ("Clinic-in-a-Box").
 
-## Arquitetura
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -17,12 +17,12 @@ Este módulo implementa a orquestração do agente de IA usando **LangGraph.js**
 │       │                                                          │
 │       ▼                                                          │
 │  ┌──────────┐     ┌─────────────┐     ┌──────────────┐          │
-│  │  Router  │────▶│   Triage    │────▶│ Escalation   │          │
+│  │  Router  │────▶│  Scheduling │────▶│Pre-Anamnesis │          │
 │  └────┬─────┘     └──────┬──────┘     └──────────────┘          │
 │       │                  │                                        │
 │       │                  ▼                                        │
 │       │           ┌─────────────┐                                │
-│       │           │ Scheduling  │                                │
+│       │           │Doubt Resol. │                                │
 │       │           └─────────────┘                                │
 │       │                                                          │
 │       └──────────▶┌──────────────┐                               │
@@ -32,211 +32,188 @@ Este módulo implementa a orquestração do agente de IA usando **LangGraph.js**
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## Componentes
+## Components
 
-### 1. State (Estado Global)
+### 1. State (Global State)
 
-Arquivo: `state.ts`
+File: `state.ts`
 
-O estado contém todas as informações compartilhadas entre os nós:
+The state holds all information shared between nodes:
 
-- **messages**: Histórico da conversa
-- **patientId/clinicId**: Identificadores multi-tenant
-- **triageUrgency**: Nível de urgência (RED/YELLOW/GREEN)
-- **intent**: Intenção identificada (TRIAGEM/AGENDAMENTO/DUVIDA_CLINICA)
-- **Dados clínicos**: Sintomas, histórico, intensidade da dor
-- **Dados de agendamento**: Profissional, data, horário
+- **messages**: Conversation history
+- **patientId/clinicId**: Multi-tenant identifiers
+- **intent**: Identified intent (QUESTION/SCHEDULING/CANCELLATION/PRE_ANAMNESIS/UNKNOWN)
+- **Clinical data**: Symptoms, history, pain intensity
+- **Scheduling data**: Professional, date, time
 
-### 2. Nodes (Nós)
+### 2. Nodes
 
-Arquivo: `nodes.ts`
+File: `nodes.ts`
 
-| Nó | Função |
+| Node | Function |
 |-----|--------|
-| `routerNode` | Analisa intenção do usuário via LLM |
-| `triageNode` | Conduz triagem conversacional |
-| `escalationNode` | Escala para humano (casos urgentes) |
-| `schedulingNode` | Gerencia agendamentos |
-| `doubtResolutionNode` | Responde dúvidas clínicas |
+| `routerNode` | Classifies user intent via LLM |
+| `doubtResolutionNode` | Answers clinic-related questions |
+| `schedulingNode` | Manages appointment scheduling |
+| `preAnamnesisNode` | Conducts conversational pre-anamnesis |
 
-### 3. Edges (Arestas Condicionais)
+### 3. Edges (Conditional Edges)
 
-Arquivo: `edges.ts`
+File: `edges.ts`
 
-| Aresta | Lógica |
+| Edge | Logic |
 |--------|--------|
-| `routeAfterRouter` | Redireciona baseado na intenção |
-| `routeAfterTriage` | Verifica urgência e progresso |
-| `routeAfterEscalation` | Sempre termina |
-| `routeAfterScheduling` | Continua até agendar |
-| `routeAfterDoubt` | Sempre termina |
+| `routeAfterRouter` | Redirects based on intent |
+| `routeAfterDoubt` | Always ends |
+| `routeAfterScheduling` | Always ends |
+| `routeAfterPreAnamnesis` | Always ends |
 
-### 4. Tools (Ferramentas)
+### 4. Tools
 
-As tools são chamadas automaticamente pelo **Scheduling Node** via Function Calling do LLM.
+Tools are called automatically by the **Scheduling** and **Pre-Anamnesis** nodes via the LLM's function calling.
 
-| Tool | Descrição | Integração DB |
+| Tool | Description | DB Integration |
 |------|-----------|---------------|
-| `check_availability` | Busca horários livres | PostgreSQL (professionals) |
-| `book_appointment` | Cria agendamento | PostgreSQL (appointments, users) |
+| `check_calendar` | Looks up available time slots | PostgreSQL (professionals) |
+| `create_event` | Creates an appointment | PostgreSQL (appointments, users) |
+| `cancel_event` | Cancels an appointment | PostgreSQL (appointments) |
+| `query_knowledge_base` | Answers clinic FAQs | RAG knowledge base |
+| `save_pre_anamnesis` | Saves pre-anamnesis data | PostgreSQL (triage_sessions) |
 
-**Fluxo de agendamento:**
-1. Usuário diz "Quero agendar"
-2. Router classifica como `AGENDAMENTO`
-3. Scheduling Node chama LLM com tools disponíveis
-4. LLM decide chamar `check_availability` → busca slots no DB
-5. LLM apresenta opções ao paciente
-6. Paciente confirma → LLM chama `book_appointment` → cria registro no DB
+**Scheduling flow:**
+1. User says "I'd like to book an appointment"
+2. Router classifies it as `SCHEDULING`
+3. Scheduling Node calls the LLM with the available tools
+4. LLM decides to call `check_calendar` → looks up slots in the DB
+5. LLM presents the options to the patient
+6. Patient confirms → LLM calls `create_event` → creates the record in the DB
 
-### 5. Graph (Grafo Principal)
+### 5. Graph (Main Graph)
 
-Arquivo: `graph.ts`
+File: `graph.ts`
 
-Compila todos os componentes em um grafo executável.
+Compiles all components into an executable graph.
 
-## Uso Básico
+## Basic Usage
 
-### 1. Executar o Grafo
+### 1. Run the Graph
 
 ```typescript
-import { runTriageGraph } from "@/lib/langgraph";
+import { runChatGraph } from "@/lib/langgraph/graph";
 import { HumanMessage } from "@langchain/core/messages";
 
-const result = await runTriageGraph({
-  messages: [new HumanMessage("Estou com dor de cabeça há 3 dias")],
-  clinicId: "uuid-da-clinica",
-  patientName: "João Silva",
-  patientEmail: "joao@email.com",
+const result = await runChatGraph({
+  messages: [new HumanMessage("I'd like to schedule an appointment")],
+  clinicId: "clinic-uuid",
+  sessionId: "session-uuid",
 });
 
-console.log(result.intent); // "TRIAGEM"
-console.log(result.triageUrgency); // "YELLOW"
+console.log(result.intent); // "SCHEDULING"
 ```
 
-### 2. Usar via Webhook
+### 2. Use via the Chat API
 
 ```bash
-POST /api/chat/webhook
+POST /api/chat
 Content-Type: application/json
 
 {
-  "message": "Preciso de uma consulta",
-  "clinic_id": "uuid-da-clinica",
-  "patient_name": "Maria Santos",
-  "patient_email": "maria@email.com",
-  "patient_phone": "5511999998888"
+  "message": "I need an appointment",
+  "sessionId": "session-uuid"
 }
 ```
 
-### 3. Usar Tools Individualmente
+### 3. Use Tools Individually
 
 ```typescript
-import { checkAvailabilityTool } from "@/lib/langgraph";
+import { checkCalendarTool } from "@/lib/langgraph/tools";
 
-const result = await checkAvailabilityTool.invoke({
-  clinicId: "uuid-da-clinica",
-  specialty: "cardiology",
-  preferredPeriod: "manha",
+const result = await checkCalendarTool.invoke({
+  clinicId: "clinic-uuid",
+  date: "2026-08-10",
 });
 
 const slots = JSON.parse(result);
-console.log(slots.professionals[0].availableSlots);
+console.log(slots.availableSlots);
 ```
 
-## Fluxos de Exemplo
+## Example Flows
 
-### Fluxo 1: Triagem Normal
+### Flow 1: General Question
 
-1. Usuário: "Estou com dor de barriga"
-2. Router → Intent: TRIAGEM
-3. Triage → Pergunta sobre sintomas
-4. Usuário responde...
-5. Triage → Classifica como GREEN
-6. Scheduling → Oferece horários
+1. User: "What insurance do you accept?"
+2. Router → Intent: QUESTION
+3. Doubt Resolution → Answers using the clinic's knowledge base
 
-### Fluxo 2: Caso Urgente
+### Flow 2: Direct Scheduling
 
-1. Usuário: "Estou com dor no peito"
-2. Router → Intent: TRIAGEM
-3. Triage → Identifica sintomas graves
-4. Triage → Classifica como RED
-5. Escalation → Mensagem de emergência
+1. User: "I'd like to book an appointment"
+2. Router → Intent: SCHEDULING
+3. Scheduling → Looks up availability
+4. User picks a time
+5. Scheduling → Creates the appointment
 
-### Fluxo 3: Agendamento Direto
+### Flow 3: Pre-Anamnesis
 
-1. Usuário: "Quero marcar consulta"
-2. Router → Intent: AGENDAMENTO
-3. Scheduling → Busca disponibilidade
-4. Usuário escolhe horário
-5. Scheduling → Cria agendamento
+1. User: "I've had a headache for 3 days"
+2. Router → Intent: PRE_ANAMNESIS
+3. Pre-Anamnesis → Collects symptoms, history, and contact info
+4. Pre-Anamnesis → Saves the triage session
 
-## Configuração
+## Configuration
 
-### Variáveis de Ambiente
+### Environment Variables
 
 ```env
 # Groq (LLM)
 GROQ_API_KEY=your-groq-key
-GROQ_MODEL=meta-llama/llama-4-scout-17b-16e-instruct
+GROQ_MODEL=llama-3.3-70b-versatile
 
-# Banco de dados (já existente)
+# Database (already configured)
 DATABASE_URL=postgresql://...
 ```
 
-## Persistência
+## Persistence
 
-O sistema usa **SqliteSaver** para persistir sessões de conversa entre chamadas.
+The system uses **PostgresSaver** to persist conversation sessions between calls.
 
-- **Database**: `data/langgraph.db` (auto-criada na primeira execução)
-- **Backup**: Fallback para MemorySaver (in-memory) se SQLite falhar
-- **Multi-turn**: O histórico completo é mantido entre chamadas usando `session_id`
+- **Multi-turn**: The full history is kept between calls using `session_id` / `thread_id`
 
 ```typescript
-// Exemplo de uso com persistência
-const result = await runTriageGraph(input, "session-uuid");
+// Example usage with persistence
+const result = await runChatGraph(input, "session-uuid");
 
-// Segunda chamada com mesmo session_id retoma a conversa
-const result2 = await runTriageGraph(input2, "session-uuid");
+// A second call with the same session_id resumes the conversation
+const result2 = await runChatGraph(input2, "session-uuid");
 ```
 
 ## Streaming
 
-O endpoint suporta streaming via Server-Sent Events (SSE):
+The chat API supports streaming via `streamChatGraph`, which yields:
 
-```bash
-# Modo JSON (resposta completa)
-POST /api/chat/webhook
+- `node_start` — a graph node has started
+- `node_complete` — a node produced output
+- `done` — the conversation finished, with the final state
 
-# Modo SSE (resposta em tempo real)
-POST /api/chat/webhook?stream=1
-```
-
-Eventos SSE:
-- `node_start` — Nó do grafo iniciado
-- `node_complete` — Resposta do nó
-- `done` — Conversa finalizada com metadados
-- `error` — Erro durante processamento
-
-## Estrutura de Arquivos
+## File Structure
 
 ```
 src/lib/langgraph/
-├── index.ts      # Exportações públicas
-├── state.ts      # Definição do estado
-├── nodes.ts      # Nós do grafo
-├── edges.ts      # Arestas condicionais
-├── tools.ts      # Ferramentas (Function Calling)
-├── graph.ts      # Grafo principal compilado
-└── README.md     # Este arquivo
+├── state.ts      # State definition
+├── nodes.ts       # Graph nodes
+├── edges.ts       # Conditional edges
+├── tools.ts        # Tools (function calling)
+├── persistence.ts  # Checkpointer / session persistence
+├── graph.ts        # Compiled main graph
+└── README.md       # This file
 ```
 
-## Próximos Passos
+## Next Steps
 
-1. [x] Persistência de sessão (SQLite via SqliteSaver)
-2. [x] Streaming de respostas (SSE)
-3. [x] Integrar Tools reais com banco PostgreSQL (check_availability, book_appointment)
-4. [ ] Token-level streaming (caractere por caractere do LLM)
-5. [ ] Implementar human-in-the-loop
-6. [ ] Criar dashboard admin para monitoramento
-7. [ ] Adicionar testes unitários e de integração (Vitest)
-8. [ ] Suporte multi-idioma completo (PT/ES/EN)
+1. [x] Session persistence (PostgresSaver)
+2. [x] Response streaming
+3. [x] Real tools wired to PostgreSQL (check_calendar, create_event)
+4. [ ] Token-level streaming
+5. [ ] Human-in-the-loop escalation for urgent cases
+6. [ ] Admin monitoring dashboard
+7. [ ] Broader unit and integration test coverage

@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
 
     if (!email || !password) {
       return NextResponse.json(
-        { error: "Email e senha sao obrigatorios" },
+        { error: "Email and password are required" },
         { status: 400 }
       );
     }
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     const user = await getAdminByEmail(email);
     if (!user || !user.isActive) {
       return NextResponse.json(
-        { error: "Credenciais invalidas" },
+        { error: "Invalid credentials" },
         { status: 401 }
       );
     }
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const valid = await verifyPassword(password, user.passwordHash);
     if (!valid) {
       return NextResponse.json(
-        { error: "Credenciais invalidas" },
+        { error: "Invalid credentials" },
         { status: 401 }
       );
     }
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("[Login API] Error:", error);
     return NextResponse.json(
-      { error: "Erro interno do servidor" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

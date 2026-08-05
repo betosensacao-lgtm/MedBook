@@ -25,15 +25,15 @@ export async function POST(request: NextRequest) {
     const { name, email, password, clinicName, clinicSpecialty, clinicPhone } = await request.json();
 
     if (!name || !email || !password || !clinicName || !clinicSpecialty || !clinicPhone) {
-      return NextResponse.json({ error: "Todos os campos sao obrigatorios" }, { status: 400 });
+      return NextResponse.json({ error: "All fields are required" }, { status: 400 });
     }
 
     if (password.length < 6) {
-      return NextResponse.json({ error: "Senha deve ter no minimo 6 caracteres" }, { status: 400 });
+      return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
     }
 
     if (!SPECIALTIES.includes(clinicSpecialty)) {
-      return NextResponse.json({ error: "Especialidade invalida" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid specialty" }, { status: 400 });
     }
 
     const existingEmail = await db
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (existingEmail.length > 0) {
-      return NextResponse.json({ error: "Este email ja esta cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "This email is already registered" }, { status: 409 });
     }
 
     let slug = generateSlug(clinicName);
@@ -120,8 +120,8 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error("[Signup API] Error:", error);
     if (error?.message?.includes("unique") || error?.code === "23505") {
-      return NextResponse.json({ error: "Email ou clinica ja cadastrados" }, { status: 409 });
+      return NextResponse.json({ error: "Email or clinic already registered" }, { status: 409 });
     }
-    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

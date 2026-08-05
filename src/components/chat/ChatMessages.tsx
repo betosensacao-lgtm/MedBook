@@ -17,7 +17,7 @@ function formatTime(ts?: string) {
   if (!ts) return "";
   try {
     const d = new Date(ts);
-    return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
   } catch {
     return "";
   }
@@ -34,7 +34,7 @@ export function ChatMessages({ messages, loading }: Props) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-gray-400 text-sm p-8 text-center">
         <span className="text-3xl mb-3">💬</span>
-        <span>Envie uma mensagem para começar.</span>
+        <span>Send a message to get started.</span>
       </div>
     );
   }

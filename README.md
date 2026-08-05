@@ -1,49 +1,44 @@
-# MedBook (ScheduleClinic)
+# MedBook
 
-Plataforma moderna de agendamento de clínicas com pré-anamnese digital e triagem por IA. Construída com Next.js 16, Supabase, LangGraph.js e deploy na Vercel.
+A modern clinic scheduling platform with AI-powered triage and pre-anamnesis. Built with Next.js 16, Supabase, LangGraph.js, and deployed on Vercel.
 
-## Funcionalidades
+## Features
 
-- **Triagem por IA** — Chat multi-turno com LangGraph.js que coleta sintomas, classifica urgência (VERMELHO/AMARELO/VERDE) e agenda consultas automaticamente
-- **Agendamento online** — Busca de clínicas por especialidade, seleção de profissional e horário, confirmação instantânea
-- **Pré-anamnese digital** — Formulário multi-step com dados pessoais, histórico médico, medicamentos, alergias e consentimento
-- **Dashboard admin** — Painel com estatísticas, lista de pacientes, agendamentos e sessões de triagem
-- **Multi-idioma** — Suporte a Español (ES), Português (PT) e English (EN)
-- **Integração WhatsApp** — Envio e recebimento de mensagens via WhatsApp Business API
-- **Pagamentos** — Assinaturas Stripe com webhooks para ciclo de vida
-- **Lembretes** — Notificações por email 24h antes da consulta (Vercel Cron)
+- **AI Triage** — Multi-turn chat powered by LangGraph.js that classifies patient intent, answers clinic questions, and schedules appointments
+- **Online Scheduling** — Conversational appointment booking with the check_calendar and create_event AI tools
+- **Pre-Anamnesis** — Conversational collection of chief complaint, symptoms, medications, allergies, and chronic conditions before the visit
+- **Admin Dashboard** — Stats, patient list, analytics, clinic knowledge base, and triage sessions
+- **WhatsApp Integration** — Send and receive messages via the Meta WhatsApp Business API webhook
+- **Document Knowledge Base** — Upload PDFs/DOCX/TXT to ground the AI's answers in clinic-specific information
 
-## Stack Tecnológica
+## Tech Stack
 
-| Camada | Tecnologia |
+| Layer | Technology |
 |--------|-----------|
 | Framework | Next.js 16 (App Router) |
-| Linguagem | TypeScript |
-| Banco de dados | PostgreSQL (Supabase) |
+| Language | TypeScript |
+| Database | PostgreSQL (Supabase) |
 | ORM | Drizzle ORM |
-| Auth | Supabase Auth (email/password) |
-| IA/LLM | Groq (Llama 4 Scout) |
-| Agente IA | LangGraph.js |
-| UI | shadcn/ui + Radix UI + Tailwind CSS |
-| Formulários | React Hook Form + Zod |
+| Auth | JWT session cookies (bcrypt password hashing) |
+| AI/LLM | Groq (Llama 3.3 70B) |
+| AI Agent | LangGraph.js |
+| UI | shadcn/ui + Tailwind CSS |
 | Email | Resend |
-| Pagamentos | Stripe |
-| Mensageria | WhatsApp Business API |
-| i18n | next-intl |
-| Testes | Jest + Testing Library |
+| Messaging | WhatsApp Business API (Meta) |
+| Testing | Jest + Testing Library |
 | Deploy | Vercel |
 | Package Manager | pnpm |
 
-## Início Rápido
+## Quick Start
 
-### Pré-requisitos
+### Prerequisites
 
 - Node.js 18+
 - pnpm
-- Conta no Supabase
-- Chave de API do Groq
+- A Supabase account
+- A Groq API key
 
-### Instalação
+### Installation
 
 ```bash
 git clone <repo-url>
@@ -51,113 +46,86 @@ cd medbook
 pnpm install
 ```
 
-### Configuração
+### Configuration
 
 ```bash
 cp .env.example .env.local
 ```
 
-Preencha as variáveis de ambiente em `.env.local` (veja `.env.example` para referência).
+Fill in the environment variables in `.env.local` (see `.env.example` for reference).
 
-### Banco de Dados
+### Database
 
 ```bash
-pnpm db:generate    # Gera as migrations
-pnpm db:migrate     # Aplica as migrations
+pnpm db:generate    # Generate migrations
+pnpm db:migrate     # Apply migrations
 ```
 
-### Desenvolvimento
+### Development
 
 ```bash
 pnpm dev
 ```
 
-Acesse http://localhost:3000
+Visit http://localhost:3000
 
-## Estrutura do Projeto
+## Project Structure
 
 ```
 src/
 ├── app/
+│   ├── (marketing)/                # Public landing page
+│   ├── admin/                      # Admin panel (dashboard, patients, analytics, context, super admin)
 │   ├── api/
-│   │   ├── chat/webhook/          # AI Triage (JSON + SSE)
-│   │   ├── cron/reminders/        # Lembretes 24h
-│   │   ├── stripe/                # Checkout, portal, webhook
-│   │   ├── triage/                # Triagem conversacional
-│   │   └── whatsapp/              # Envio e webhook
-│   ├── auth/                      # Login, registro, verificação
-│   ├── [locale]/
-│   │   ├── (app)/                 # Dashboard (autenticado)
-│   │   │   ├── appointments/      # Gestão de agendamentos
-│   │   │   ├── dashboard/         # Painel principal
-│   │   │   ├── patients/          # Lista de pacientes
-│   │   │   ├── settings/          # Perfil, clínica, billing
-│   │   │   ├── triages/           # Sessões de triagem
-│   │   │   └── whatsapp/          # Integração WhatsApp
-│   │   ├── booking/               # Fluxo público de agendamento
-│   │   ├── chat/                  # Interface de chat IA
-│   │   └── pre-anamnesis/         # Formulário pré-consulta
-│   └── logout/
+│   │   ├── admin/                  # Auth, clinics, documents, users, LGPD data requests
+│   │   ├── chat/                   # AI chat endpoint
+│   │   ├── health/                 # Health check endpoint
+│   │   └── webhook/                # WhatsApp/Meta webhook
+│   ├── auth/                       # Login-adjacent auth pages
+│   └── chat/                       # Public + embeddable AI chat widget
 ├── components/
-│   ├── anamnesis/                 # Formulário de pré-anamnese
-│   ├── layout/                    # Sidebar e Navbar
-│   └── whatsapp/                  # QR Code WhatsApp
+│   ├── chat/                       # Chat UI components
+│   └── ui/                         # Shared UI primitives
 ├── db/
-│   ├── schema.ts                  # Schema Drizzle (7 tabelas)
-│   ├── index.ts                   # Conexão com banco
-│   └── migrations/                # Migrations geradas
+│   ├── schema.ts                   # Drizzle schema
+│   ├── index.ts                    # Database connection
+│   └── migrations/                 # Generated migrations
 ├── lib/
-│   ├── langgraph/                 # Agente IA (LangGraph.js)
-│   ├── email/                     # Templates e envio (Resend)
-│   ├── whatsapp/                  # Cliente WhatsApp Business
-│   ├── ai.ts                      # Cliente Groq
-│   ├── booking.ts                 # Lógica de agendamento
-│   ├── queries.ts                 # Queries Drizzle
-│   ├── stripe.ts                  # SDK Stripe
-│   ├── supabase.ts                # Clientes browser/server
-│   ├── triage-prompt.ts           # Prompts do sistema (ES/PT/EN)
-│   └── validations.ts             # Schemas Zod
-├── messages/                      # Traduções (next-intl)
-├── styles/globals.css             # Estilos globais
-└── types/index.ts                 # Tipos TypeScript
+│   ├── langgraph/                  # AI agent (LangGraph.js): state, nodes, edges, tools, graph
+│   ├── security/                   # Prompt-injection guardrails
+│   ├── rag/                        # Clinic knowledge base retrieval
+│   ├── documents/                  # Document upload parsing
+│   ├── analytics/                  # Admin dashboard analytics queries
+│   ├── patients/                   # Patient queries
+│   ├── meta/                       # WhatsApp/Meta message normalization
+│   ├── ai.ts                       # Groq client
+│   └── auth.ts                     # Session tokens, password hashing, reset tokens
+├── styles/globals.css               # Global styles
+└── types/index.ts                   # TypeScript types
 ```
 
-## Documentação
+## Available Scripts
 
-| Documento | Descrição |
-|-----------|-----------|
-| [API Reference](docs/api/README.md) | Referência completa dos endpoints |
-| [Triage Webhook](docs/api/triage-webhook.md) | Endpoint de chat IA com JSON e SSE |
-| [Architecture](docs/architecture/README.md) | Visão geral do sistema |
-| [Database Schema](docs/architecture/database.md) | Schema completo do banco |
-| [LangGraph Agent](docs/architecture/langgraph.md) | Arquitetura do agente IA |
-| [GLOSSARIO.md](GLOSSARIO.md) | Glossário para iniciantes (PT) |
-
-## Scripts Disponíveis
-
-| Comando | Descrição |
+| Command | Description |
 |---------|-----------|
-| `pnpm dev` | Servidor de desenvolvimento |
-| `pnpm build` | Build de produção |
-| `pnpm start` | Iniciar servidor de produção |
-| `pnpm lint` | Verificar código |
-| `pnpm test` | Executar testes |
-| `pnpm test:watch` | Testes em watch mode |
-| `pnpm test:coverage` | Testes com cobertura |
-| `pnpm db:generate` | Gerar migrations |
-| `pnpm db:migrate` | Aplicar migrations |
-| `pnpm db:studio` | Abrir Drizzle Studio |
+| `pnpm dev` | Development server |
+| `pnpm build` | Production build |
+| `pnpm start` | Start production server |
+| `pnpm lint` | Lint the code |
+| `pnpm test` | Run tests |
+| `pnpm test:watch` | Tests in watch mode |
+| `pnpm test:coverage` | Tests with coverage |
+| `pnpm db:generate` | Generate migrations |
+| `pnpm db:migrate` | Apply migrations |
+| `pnpm db:studio` | Open Drizzle Studio |
+| `pnpm seed-demo` | Seed demo chat sessions |
+| `pnpm seed-admin` | Seed an admin user |
+| `pnpm health` | Run the health-check script |
 
-## Deploy
+## Deployment
 
-O projeto está configurado para deploy na Vercel:
+The project is set up for deployment on Vercel via the CLI (`vercel --prod`) rather than Git integration — see `src/lib/langgraph/README.md` and the project memory for details on the current deploy flow.
 
-1. Conecte o repositório ao Vercel
-2. Configure as variáveis de ambiente no painel do Vercel
-3. O deploy acontece automaticamente a cada push em `main`
+## License
 
-**Cron Jobs:** Configure no `vercel.json` → `/api/cron/reminders` roda a cada hora.
-
-## Licença
-
-Projeto privado.
+Private project.

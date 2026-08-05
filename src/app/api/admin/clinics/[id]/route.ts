@@ -25,7 +25,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
 
     if (Object.keys(updates).length === 0) {
-      return NextResponse.json({ error: "Nenhum campo para atualizar" }, { status: 400 });
+      return NextResponse.json({ error: "No fields to update" }, { status: 400 });
     }
 
     updates.updatedAt = new Date();
@@ -39,7 +39,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json(updated);
   } catch (error) {
     console.error("[Clinics API] Error updating clinic:", error);
-    return NextResponse.json({ error: "Erro ao atualizar clinica" }, { status: 500 });
+    return NextResponse.json({ error: "Error updating clinic" }, { status: 500 });
   }
 }
 
@@ -54,13 +54,13 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       .returning({ id: clinics.id, name: clinics.name });
 
     if (!deleted) {
-      return NextResponse.json({ error: "Clinica nao encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Clinic not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ message: `Clinica "${deleted.name}" excluida` });
+    return NextResponse.json({ message: `Clinic "${deleted.name}" deleted` });
   } catch (error) {
     console.error("[Clinics API] Error deleting clinic:", error);
-    return NextResponse.json({ error: "Erro ao excluir clinica" }, { status: 500 });
+    return NextResponse.json({ error: "Error deleting clinic" }, { status: 500 });
   }
 }
 
@@ -76,12 +76,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       .limit(1);
 
     if (!clinic) {
-      return NextResponse.json({ error: "Clinica nao encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Clinic not found" }, { status: 404 });
     }
 
     return NextResponse.json(clinic);
   } catch (error) {
     console.error("[Clinics API] Error fetching clinic:", error);
-    return NextResponse.json({ error: "Erro ao buscar clinica" }, { status: 500 });
+    return NextResponse.json({ error: "Error fetching clinic" }, { status: 500 });
   }
 }

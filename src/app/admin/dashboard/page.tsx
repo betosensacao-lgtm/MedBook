@@ -16,12 +16,12 @@ export default async function AdminDashboardPage() {
     <div className="max-w-6xl mx-auto space-y-8">
       <PageHeader
         title="Dashboard"
-        description="Visao geral da atividade do chat"
+        description="Overview of chat activity"
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          label="Conversas Hoje"
+          label="Conversations Today"
           value={stats.sessionsToday}
           variant="highlight"
           icon={
@@ -31,7 +31,7 @@ export default async function AdminDashboardPage() {
           }
         />
         <StatCard
-          label="Total de Conversas"
+          label="Total Conversations"
           value={stats.totalSessions}
           icon={
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -40,7 +40,7 @@ export default async function AdminDashboardPage() {
           }
         />
         <StatCard
-          label="Mensagens Hoje"
+          label="Messages Today"
           value={stats.messagesToday}
           icon={
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,7 +49,7 @@ export default async function AdminDashboardPage() {
           }
         />
         <StatCard
-          label="Total de Mensagens"
+          label="Total Messages"
           value={stats.totalMessages}
           icon={
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,7 +61,7 @@ export default async function AdminDashboardPage() {
 
       <Card>
         <CardHeader>
-          <h2 className="text-lg font-semibold text-gray-900">Pacientes Recentes</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Recent Patients</h2>
         </CardHeader>
         <CardContent className="p-0">
           {stats.recentSessions.length === 0 ? (
@@ -71,19 +71,19 @@ export default async function AdminDashboardPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               }
-              title="Nenhuma conversa ainda"
-              description="As conversas dos pacientes aparecerao aqui"
+              title="No conversations yet"
+              description="Patient conversations will appear here"
             />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-100 text-gray-500 text-xs uppercase tracking-wider">
-                    <th className="text-left px-6 py-3 font-medium">Nome</th>
-                    <th className="text-left px-6 py-3 font-medium">Telefone</th>
+                    <th className="text-left px-6 py-3 font-medium">Name</th>
+                    <th className="text-left px-6 py-3 font-medium">Phone</th>
                     <th className="text-left px-6 py-3 font-medium">Email</th>
-                    <th className="text-center px-6 py-3 font-medium">Mensagens</th>
-                    <th className="text-right px-6 py-3 font-medium">Data</th>
+                    <th className="text-center px-6 py-3 font-medium">Messages</th>
+                    <th className="text-right px-6 py-3 font-medium">Date</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -109,7 +109,7 @@ export default async function AdminDashboardPage() {
                         <Badge variant="info">{s.messageCount}</Badge>
                       </td>
                       <td className="px-6 py-4 text-right text-gray-400 text-xs">
-                        {new Date(s.createdAt).toLocaleDateString("pt-BR", {
+                        {new Date(s.createdAt).toLocaleDateString("en-US", {
                           day: "2-digit",
                           month: "2-digit",
                           hour: "2-digit",

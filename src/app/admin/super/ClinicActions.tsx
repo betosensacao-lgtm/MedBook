@@ -34,15 +34,15 @@ export function ClinicActions({ clinic, onUpdated }: ClinicActionsProps) {
       });
 
       if (res.ok) {
-        toast.success(`"${clinic.name}" atualizada`);
+        toast.success(`"${clinic.name}" updated`);
         setShowEdit(false);
         onUpdated();
       } else {
         const data = await res.json();
-        toast.error(data.error || "Erro ao atualizar");
+        toast.error(data.error || "Error updating");
       }
     } catch {
-      toast.error("Erro ao conectar");
+      toast.error("Connection error");
     } finally {
       setSaving(false);
     }
@@ -56,14 +56,14 @@ export function ClinicActions({ clinic, onUpdated }: ClinicActionsProps) {
       });
 
       if (res.ok) {
-        toast.success(`"${clinic.name}" excluida`);
+        toast.success(`"${clinic.name}" deleted`);
         setShowDelete(false);
         onUpdated();
       } else {
-        toast.error("Erro ao excluir");
+        toast.error("Error deleting");
       }
     } catch {
-      toast.error("Erro ao conectar");
+      toast.error("Connection error");
     } finally {
       setSaving(false);
     }
@@ -76,17 +76,17 @@ export function ClinicActions({ clinic, onUpdated }: ClinicActionsProps) {
           onClick={() => setShowEdit(true)}
           className="text-xs text-teal-600 hover:text-teal-700 font-medium"
         >
-          Editar
+          Edit
         </button>
         <button
           onClick={() => setShowDelete(true)}
           className="text-xs text-red-500 hover:text-red-600 font-medium"
         >
-          Excluir
+          Delete
         </button>
       </div>
 
-      <Modal open={showEdit} onClose={() => setShowEdit(false)} title={`Editar: ${clinic.name}`}>
+      <Modal open={showEdit} onClose={() => setShowEdit(false)} title={`Edit: ${clinic.name}`}>
         <div className="space-y-5">
           <div className="flex items-center gap-3">
             <input
@@ -96,24 +96,24 @@ export function ClinicActions({ clinic, onUpdated }: ClinicActionsProps) {
               onChange={(e) => setIsVerified(e.target.checked)}
               className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
             />
-            <label htmlFor="verified" className="text-sm text-gray-700">Clinica verificada</label>
+            <label htmlFor="verified" className="text-sm text-gray-700">Verified clinic</label>
           </div>
 
           <div className="flex gap-3 justify-end pt-2">
-            <Button variant="ghost" onClick={() => setShowEdit(false)}>Cancelar</Button>
-            <Button loading={saving} onClick={handleUpdate}>Salvar</Button>
+            <Button variant="ghost" onClick={() => setShowEdit(false)}>Cancel</Button>
+            <Button loading={saving} onClick={handleUpdate}>Save</Button>
           </div>
         </div>
       </Modal>
 
-      <Modal open={showDelete} onClose={() => setShowDelete(false)} title={`Excluir ${clinic.name}?`}>
+      <Modal open={showDelete} onClose={() => setShowDelete(false)} title={`Delete ${clinic.name}?`}>
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
-            Tem certeza? Esta acao nao pode ser desfeita. Todos os dados da clinica serao removidos.
+            Are you sure? This action cannot be undone. All data for this clinic will be removed.
           </p>
           <div className="flex gap-3 justify-end">
-            <Button variant="ghost" onClick={() => setShowDelete(false)}>Cancelar</Button>
-            <Button variant="danger" loading={saving} onClick={handleDelete}>Excluir</Button>
+            <Button variant="ghost" onClick={() => setShowDelete(false)}>Cancel</Button>
+            <Button variant="danger" loading={saving} onClick={handleDelete}>Delete</Button>
           </div>
         </div>
       </Modal>

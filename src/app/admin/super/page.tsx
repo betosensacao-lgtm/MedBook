@@ -73,30 +73,30 @@ export default async function SuperAdminPage() {
     <div className="max-w-7xl mx-auto space-y-8">
       <PageHeader
         title="Super Admin"
-        description="Visao completa do sistema MedBook"
+        description="Full overview of the MedBook system"
       />
 
       {/* System Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
-        <StatCard label="Usuarios" value={userCount.count} />
-        <StatCard label="Clinicas" value={clinicCount.count} />
-        <StatCard label="Conversas Hoje" value={sessionsToday.count} variant="highlight" />
-        <StatCard label="Total Conversas" value={sessionCount.count} />
-        <StatCard label="Mensagens" value={messageCount.count} />
-        <StatCard label="Documentos" value={docCount.count} />
+        <StatCard label="Users" value={userCount.count} />
+        <StatCard label="Clinics" value={clinicCount.count} />
+        <StatCard label="Conversations Today" value={sessionsToday.count} variant="highlight" />
+        <StatCard label="Total Conversations" value={sessionCount.count} />
+        <StatCard label="Messages" value={messageCount.count} />
+        <StatCard label="Documents" value={docCount.count} />
       </div>
 
       {/* Clinic Management */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Clinicas</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Clinics</h2>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           {allClinics.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
-              Nenhuma clinica cadastrada ainda.
+              No clinics registered yet.
             </div>
           ) : (
             <ClinicsTable clinics={allClinics} />
@@ -107,19 +107,19 @@ export default async function SuperAdminPage() {
       {/* User Management */}
       <Card>
         <CardHeader>
-          <h2 className="text-lg font-semibold text-gray-900">Usuarios do Sistema</h2>
+          <h2 className="text-lg font-semibold text-gray-900">System Users</h2>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 text-gray-500 text-xs uppercase tracking-wider">
-                  <th className="text-left px-5 py-3 font-medium">Nome</th>
+                  <th className="text-left px-5 py-3 font-medium">Name</th>
                   <th className="text-left px-5 py-3 font-medium">Email</th>
-                  <th className="text-center px-5 py-3 font-medium">Funcao</th>
+                  <th className="text-center px-5 py-3 font-medium">Role</th>
                   <th className="text-center px-5 py-3 font-medium">Status</th>
-                  <th className="text-left px-5 py-3 font-medium">Ultimo Login</th>
-                  <th className="text-right px-5 py-3 font-medium">Criado em</th>
+                  <th className="text-left px-5 py-3 font-medium">Last Login</th>
+                  <th className="text-right px-5 py-3 font-medium">Created</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -134,21 +134,21 @@ export default async function SuperAdminPage() {
                     </td>
                     <td className="px-5 py-3 text-center">
                       <Badge variant={u.isActive ? "success" : "danger"}>
-                        {u.isActive ? "Ativo" : "Inativo"}
+                        {u.isActive ? "Active" : "Inactive"}
                       </Badge>
                     </td>
                     <td className="px-5 py-3 text-gray-500 text-xs">
                       {u.lastLoginAt
-                        ? new Date(u.lastLoginAt).toLocaleDateString("pt-BR", {
+                        ? new Date(u.lastLoginAt).toLocaleDateString("en-US", {
                             day: "2-digit",
                             month: "2-digit",
                             hour: "2-digit",
                             minute: "2-digit",
                           })
-                        : "Nunca"}
+                        : "Never"}
                     </td>
                     <td className="px-5 py-3 text-right text-gray-400 text-xs">
-                      {new Date(u.createdAt).toLocaleDateString("pt-BR")}
+                      {new Date(u.createdAt).toLocaleDateString("en-US")}
                     </td>
                   </tr>
                 ))}

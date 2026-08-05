@@ -21,17 +21,17 @@ const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://medbook-amber.vercel
 
 export const metadata: Metadata = {
   title: {
-    default: "MedBook — Atendimento Inteligente para Clínicas",
+    default: "MedBook — Intelligent Care for Clinics",
     template: "%s | MedBook",
   },
   description:
-    "Chatbot com IA para clínicas. Agende consultas, tire dúvidas e atende pacientes 24h via WhatsApp e chat web.",
+    "AI chatbot for clinics. Schedule appointments, answer questions, and support patients 24/7 via WhatsApp and web chat.",
   keywords: [
-    "chatbot para clínicas",
-    "agendamento online",
-    "inteligência artificial saúde",
-    "WhatsApp clínica",
-    "software para clínicas",
+    "chatbot for clinics",
+    "online scheduling",
+    "healthcare artificial intelligence",
+    "WhatsApp clinic",
+    "software for clinics",
   ],
   authors: [{ name: "MedBook" }],
   creator: "MedBook",
@@ -39,11 +39,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   openGraph: {
     type: "website",
-    locale: "pt_BR",
+    locale: "en_US",
     siteName: "MedBook",
-    title: "MedBook — Atendimento Inteligente para Clínicas",
+    title: "MedBook — Intelligent Care for Clinics",
     description:
-      "Chatbot com IA que agenda consultas, tira dúvidas e atende pacientes 24h via WhatsApp.",
+      "AI chatbot that schedules appointments, answers questions, and supports patients 24/7 via WhatsApp.",
     url: baseUrl,
     images: [
       {
@@ -56,9 +56,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "MedBook — Atendimento Inteligente para Clínicas",
+    title: "MedBook — Intelligent Care for Clinics",
     description:
-      "Chatbot com IA que agenda consultas, tira dúvidas e atende pacientes 24h.",
+      "AI chatbot that schedules appointments, answers questions, and supports patients 24/7.",
     images: ["/og-image.png"],
   },
   robots: {
@@ -73,7 +73,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt" className={`${sora.variable} ${inter.variable}`}>
+    <html lang="en" className={`${sora.variable} ${inter.variable}`}>
       <body className="antialiased">
         {children}
         <Toaster richColors position="top-right" />

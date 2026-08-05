@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
 
     if (!email) {
       return NextResponse.json(
-        { error: "Email e obrigatorio" },
+        { error: "Email is required" },
         { status: 400 }
       );
     }
@@ -18,27 +18,29 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json({
         success: true,
-        message: "Se o email estiver cadastrado, voce recebera um link de redefinicao.",
+        message: "If the email is registered, you will receive a reset link.",
       });
     }
 
     const resetToken = await createResetToken(user.id);
 
-    // In production, send email with reset link
-    // For now, log the token for development
-    console.log(`[Password Reset] Token for ${email}: ${resetToken}`);
-    console.log(`[Password Reset] Reset URL: ${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/admin/reset-password?token=${resetToken}`);
+    // TODO: send the reset link by email (RESEND_API_KEY/EMAIL_FROM are already
+    // configured for this project — wire this up instead of relying on dev logging).
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`[Password Reset] Token for ${email}: ${resetToken}`);
+      console.log(`[Password Reset] Reset URL: ${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/admin/reset-password?token=${resetToken}`);
+    }
 
     return NextResponse.json({
       success: true,
-      message: "Se o email estiver cadastrado, voce recebera um link de redefinicao.",
+      message: "If the email is registered, you will receive a reset link.",
       // Include token in dev mode for testing
       ...(process.env.NODE_ENV !== "production" && { resetToken }),
     });
   } catch (error) {
     console.error("[Forgot Password API] Error:", error);
     return NextResponse.json(
-      { error: "Erro interno do servidor" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

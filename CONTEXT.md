@@ -1,131 +1,134 @@
-# MedBook — Contexto do Projeto (Julho 2026)
+# MedBook — Project Context (July 2026)
 
-## Status atual
-Landing page redesenhada, precificacao implementada, admin funcional com dados demo. Stripe checkout integrado.
+## Status at the time
+
+Landing page redesigned, pricing implemented, admin functional with demo data. Stripe checkout integrated.
 
 ---
 
 ---
 
-## O que ja foi feito
+## What was done
 
 ### Landing page
-- Redesign completo: Sora (headings) + Inter (body), paleta refinada (`#F5F8FA`), preview do chat animado
-- 6 cards de features, precos (3 tiers), depoimentos, CTA final, footer
-- Testada em mobile (375px), tablet (768px), desktop (1280px) — zero scroll horizontal
+- Full redesign: Sora (headings) + Inter (body), refined palette (`#F5F8FA`), animated chat preview
+- 6 feature cards, pricing (3 tiers), testimonials, final CTA, footer
+- Tested on mobile (375px), tablet (768px), desktop (1280px) — zero horizontal scroll
 
-### Precificacao
-- Tabela `pricing_plans` com 3 tiers: Starter R$97/mes, Professional R$197/mes, Enterprise R$397/mes
-- `clinics` atualizada com `plan_id` FK, `billing_cycle`, `trial_ends_at`, `conversations_used_monthly`
+### Pricing
+- `pricing_plans` table with 3 tiers: Starter R$97/mo, Professional R$197/mo, Enterprise R$397/mo
+- `clinics` updated with `plan_id` FK, `billing_cycle`, `trial_ends_at`, `conversations_used_monthly`
 - Seed: `pnpm seed-plans`
 - API: `GET/POST /api/admin/clinics`, `GET/PATCH/DELETE /api/admin/clinics/[id]`, `GET /api/admin/plans`
 
-### Seed dados demo
-- `pnpm seed-demo`: 20 sessoes de chat com pacientes reais (nomes, telefones, emails) distribuidas nos ultimos 14 dias
-- Dashboards e analytics populados com dados
+### Demo data seed
+- `pnpm seed-demo`: 20 chat sessions with realistic patients (names, phones, emails) spread over the last 14 days
+- Dashboards and analytics populated with data
 
-### Corrigido
-- **Erro 500 analytics/dashboard**: Date objects dentro de `sql\` raw templates — trocado por `lt()` do Drizzle
+### Fixed
+- **500 error on analytics/dashboard**: Date objects inside `sql\` raw templates — replaced with Drizzle's `lt()`
 - **Plans API**: `where(asc())` → `orderBy(asc())`
-- **Landing redirect**: `src/app/page.tsx` removia rota p/ /admin
-- **Chat initial message**: greeting IA adicionado em /chat e /chat/embed
-- **Deprecation warning**: `cross-env NODE_OPTIONS=--no-deprecation` para Windows
+- **Landing redirect**: `src/app/page.tsx` was redirecting the route to /admin
+- **Chat initial message**: AI greeting added to /chat and /chat/embed
+- **Deprecation warning**: `cross-env NODE_OPTIONS=--no-deprecation` for Windows
 
-### Testes e build
-- 59/59 testes passando
-- 27 rotas buildando
-- Zero console errors/warnings no frontend
-- Push feito para origin (scheduleclinic) e aria-med
+### Tests and build
+- 59/59 tests passing
+- 27 routes building
+- Zero console errors/warnings on the frontend
+- Pushed to origin (scheduleclinic) and aria-med
 
 ---
 
-## Arquitetura
+## Architecture (at the time)
 
-### Stack principal
+### Main stack
 - **Next.js 16** App Router, `src/` dir, `@/*` → `src/*`
 - **Drizzle ORM** + Supabase PostgreSQL
-- **LangGraph.js** — agente conversacional (3 nodes: doubt_resolution, scheduling, pre_anamnesis)
+- **LangGraph.js** — conversational agent (3 nodes: doubt_resolution, scheduling, pre_anamnesis)
 - **Google Calendar API** — service account
 - **Groq** — LLM provider (OpenAI-compatible)
 
-### Rotas atuais
+### Routes at the time
 ```
 /                   → landing page
-/chat               → chat web standalone
+/chat               → standalone web chat
 /chat/embed         → chat embed (iframe)
-/admin/login        → login administrativo
-/admin/dashboard    → dashboard com metricas
-/admin/analytics    → metricas detalhadas
-/admin/super        → super admin (CRUD clinicas + planos)
-/admin/patients     → pacientes
-/admin/contexto     → base de conhecimento
-/admin              → calendario Google
-/api/chat           → POST endpoint do chat
-/api/admin/clinics  → CRUD clinicas
-/api/admin/plans    → listar planos
+/admin/login        → admin login
+/admin/dashboard    → metrics dashboard
+/admin/analytics    → detailed metrics
+/admin/super        → super admin (clinic + plan CRUD)
+/admin/patients     → patients
+/admin/contexto     → knowledge base
+/admin              → Google calendar
+/api/chat           → POST chat endpoint
+/api/admin/clinics  → clinic CRUD
+/api/admin/plans    → list plans
 /api/health         → health check
 ```
 
-### Database
-- Tabelas: `users`, `clinics`, `pricing_plans`, `professionals`, `chat_sessions`, `chat_messages`, `appointments`, `clinic_context`, `triage_sessions`, `triage_messages`
+### Database (at the time)
+- Tables: `users`, `clinics`, `pricing_plans`, `professionals`, `chat_sessions`, `chat_messages`, `appointments`, `clinic_context`, `triage_sessions`, `triage_messages`
 - `chat_sessions`: session_id, clinic_id, patient_name, patient_phone, patient_email, created_at
 - `chat_messages`: session_id, role (user/assistant), content, created_at
-- `pricing_plans`: name, slug, price_monthly/yearly (em centavos), max_professionals, max_conversations_monthly, features JSONB
+- `pricing_plans`: name, slug, price_monthly/yearly (in cents), max_professionals, max_conversations_monthly, features JSONB
 
 ---
 
-## Proximas etapas (prioridade)
+## Next steps (priority, at the time)
 
-### 1. Deploy publico
-- Subir para Vercel com URL publica para clientes acessarem
-- Configurar dominio personalizado
-- Verificar variaveis de ambiente no deploy
+### 1. Public deploy
+- Deploy to Vercel with a public URL for clients to access
+- Configure a custom domain
+- Verify environment variables on deploy
 
-### 2. WhatsApp ativo
-- Codigo existe em `src/lib/meta/` mas sem numero verificado no WABA
-- Precisa: numero WhatsApp Business verificado + configurar Meta webhook
-- Ativar `src/app/api/webhook/route.ts` (hoje responde apenas GET verify)
+### 2. Activate WhatsApp
+- Code exists in `src/lib/meta/` but without a verified WABA number
+- Needed: verified WhatsApp Business number + Meta webhook configuration
+- Activate `src/app/api/webhook/route.ts` (at the time it only answered the GET verify challenge)
 
-### 3. Fluxo de checkout / assinatura ✅
-- Stripe SDK integrado (`src/lib/stripe.ts`)
-- API: `POST /api/stripe/create-checkout-session` — cria sessao Stripe Checkout
-- API: `POST /api/stripe/create-portal-session` — portal de gerenciamento Stripe
+### 3. Checkout / subscription flow ✅
+- Stripe SDK integrated (`src/lib/stripe.ts`)
+- API: `POST /api/stripe/create-checkout-session` — creates a Stripe Checkout session
+- API: `POST /api/stripe/create-portal-session` — Stripe Customer Portal
 - Webhook: `POST /api/stripe/webhook` — `checkout.session.completed`, `customer.subscription.*`, `invoice.payment_failed`
-- Seed: `pnpm seed-stripe-products` — cria produtos/precos no Stripe e salva IDs no DB
-- Pagina publica `/pricing` com toggle mensal/anual
-- Pagina admin `/admin/billing` com plano atual, uso, upgrade/downgrade
-- Colunas adicionadas ao schema: `stripe_product_id`, `stripe_price_id_monthly`, `stripe_price_id_yearly` em `pricing_plans`
-- **Precisa**: `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` no .env.local + Vercel
+- Seed: `pnpm seed-stripe-products` — creates products/prices in Stripe and saves the IDs to the DB
+- Public `/pricing` page with a monthly/yearly toggle
+- Admin `/admin/billing` page with current plan, usage, upgrade/downgrade
+- Columns added to the schema: `stripe_product_id`, `stripe_price_id_monthly`, `stripe_price_id_yearly` on `pricing_plans`
+- **Needed**: `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` in .env.local + Vercel
 
-### 4. Onboarding de nova clinica ✅
-- Pagina `/admin/signup` com formulario completo (nome, email, senha, clinica, especialidade, telefone)
-- API `POST /api/admin/signup` — cria `users` + `clinics` + `adminUsers` em transacao, auto-login
-- Middleware (`src/middleware.ts`) ativo — protege `/admin/*`, exceto login/signup/forgot/reset
-- Login page tem link para cadastro
-- Landing page CTAs apontam para `/admin/signup`
-- Checkout e portal usam `clinicId` da sessao JWT, nao mais env var hardcoded
-- API `GET /api/admin/me` — retorna usuario logado a partir do cookie
+### 4. New-clinic onboarding ✅
+- `/admin/signup` page with a full form (name, email, password, clinic, specialty, phone)
+- API `POST /api/admin/signup` — creates `users` + `clinics` + `adminUsers` in a transaction, auto-login
+- Middleware (`src/middleware.ts`) active — protects `/admin/*`, except login/signup/forgot/reset
+- Login page links to signup
+- Landing page CTAs point to `/admin/signup`
+- Checkout and portal use the `clinicId` from the JWT session, no longer a hardcoded env var
+- API `GET /api/admin/me` — returns the logged-in user from the cookie
 
 ### 5. Landing page SEO
-- Meta tags, OG image, descricao
+- Meta tags, OG image, description
 - Google Analytics / Plausible
 - Sitemap
 
 ---
 
-## Comandos uteis
+## Useful commands (at the time)
 
-| Comando | Descricao |
+| Command | Description |
 |---------|-----------|
-| `pnpm dev` | Servidor dev |
-| `pnpm build` | Build producao |
-| `pnpm test` | Jest (59 testes) |
+| `pnpm dev` | Dev server |
+| `pnpm build` | Production build |
+| `pnpm test` | Jest (59 tests) |
 | `pnpm seed-plans` | Seed pricing_plans (3 tiers) |
-| `pnpm seed-demo` | Seed 20 sessoes chat demo |
+| `pnpm seed-demo` | Seed 20 demo chat sessions |
 
-## Pontos de atencao
-- `ignoreBuildErrors: true` — erros TS nao bloqueiam build
-- `matcher: []` no middleware — nunca executa
-- `strict: false` no tsconfig — tipos relaxados
-- Colunas legadas no schema: `stripeCustomerId`, `subscriptionId`, `supabaseId` (ainda no banco, nao usadas)
-- Google Calendar private key precisa de `replace(/\\n/g, "\n")` (ja tratado)
+## Things to watch out for (at the time)
+- `ignoreBuildErrors: true` — TS errors don't block the build
+- `matcher: []` in middleware — never runs
+- `strict: false` in tsconfig — relaxed typing
+- Legacy columns in the schema: `stripeCustomerId`, `subscriptionId`, `supabaseId` (still in the DB, unused)
+- Google Calendar private key needs `replace(/\\n/g, "\n")` (already handled)
+
+> **Note:** This file is a point-in-time snapshot from July 2026. Stripe billing, Google Calendar, and `pricing_plans` were subsequently removed from the project — see [AGENTS.md](AGENTS.md) for the current architecture.

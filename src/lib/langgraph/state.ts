@@ -3,11 +3,11 @@ import { BaseMessage } from "@langchain/core/messages";
 import type { MetaPlatform } from "@/types/meta";
 
 export type Intent =
-  | "DUVIDA"
-  | "AGENDAMENTO"
-  | "CANCELAMENTO"
-  | "PRE_ANAMNESE"
-  | "NAO_IDENTIFICADO";
+  | "QUESTION"
+  | "SCHEDULING"
+  | "CANCELLATION"
+  | "PRE_ANAMNESIS"
+  | "UNKNOWN";
 
 export interface PreAnamnesisData {
   fullName?: string;
@@ -50,7 +50,7 @@ export const ChatState = Annotation.Root({
 
   intent: Annotation<Intent>({
     reducer: (_, prev) => prev,
-    default: () => "NAO_IDENTIFICADO",
+    default: () => "UNKNOWN",
   }),
 
   calendarId: Annotation<string>({
@@ -100,7 +100,7 @@ export const ChatState = Annotation.Root({
 
   locale: Annotation<string>({
     reducer: (_, prev) => prev,
-    default: () => "pt",
+    default: () => "en",
   }),
 });
 

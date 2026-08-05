@@ -10,9 +10,9 @@ import { eq } from "drizzle-orm";
 import { applyGuardrails, validateOutput, logSecurityEvent } from "@/lib/security/guardrails";
 
 const NAME_PATTERNS = [
-  /meu nome (?:é|e) (.+?)(?:,|\.|!|\?|$)/i,
-  /me chamo (.+?)(?:,|\.|!|\?|$)/i,
-  /sou (.+?)(?:,|\.|!|\?|$)/i,
+  /my name is (.+?)(?:,|\.|!|\?|$)/i,
+  /i'?m called (.+?)(?:,|\.|!|\?|$)/i,
+  /this is (.+?)(?:,|\.|!|\?|$)/i,
 ];
 
 const PHONE_PATTERNS = [
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     const { message, sessionId: incomingId } = await request.json();
 
     if (!message || typeof message !== "string" || !message.trim()) {
-      return NextResponse.json({ error: "Mensagem obrigatoria" }, { status: 400 });
+      return NextResponse.json({ error: "Message is required" }, { status: 400 });
     }
 
     const clinicId = process.env.CLINIC_ID || "default";
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     // Rate limiting
     if (!checkRateLimit(sessionId)) {
       return NextResponse.json(
-        { error: "Limite de mensagens atingido. Aguarde um momento." },
+        { error: "Message limit reached. Please wait a moment." },
         { status: 429 }
       );
     }
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
     let reply =
       typeof lastMessage?.content === "string"
         ? lastMessage.content
-        : "Desculpe, ocorreu um erro ao processar sua mensagem.";
+        : "Sorry, an error occurred while processing your message.";
 
     // Validate output (ensure no system prompt leakage)
     const outputCheck = validateOutput(reply);
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("[Chat API] Error:", error);
     return NextResponse.json(
-      { error: "Erro interno do servidor" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

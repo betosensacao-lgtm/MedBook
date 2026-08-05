@@ -20,7 +20,7 @@ export function RealtimeDashboard() {
           console.log("Change received on triage_sessions!", payload);
           setLastEvent({ type: "triage", data: payload });
           setIsVisible(true);
-          toast.info(`Nova atualização na triagem ao vivo!`);
+          toast.info(`New live update on triage!`);
         }
       )
       .on(
@@ -30,7 +30,7 @@ export function RealtimeDashboard() {
           console.log("Change received on appointments!", payload);
           setLastEvent({ type: "appointment", data: payload });
           setIsVisible(true);
-          toast.success(`Agendamento atualizado ao vivo!`);
+          toast.success(`Appointment updated live!`);
         }
       )
       .subscribe((status) => {

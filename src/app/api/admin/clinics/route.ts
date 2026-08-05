@@ -1,12 +1,30 @@
 import { db } from "@/db";
 import { clinics, adminUsers } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { verifySessionToken, COOKIE_NAME } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
+async function requireSuperAdmin(request: NextRequest) {
+  const cookie = request.cookies.get(COOKIE_NAME);
+  if (!cookie) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  const session = await verifySessionToken(cookie.value).catch(() => null);
+  if (!session || session.role !== "super_admin") {
+    return NextResponse.json({ error: "Permission denied" }, { status: 403 });
+  }
+
+  return null;
+}
+
 // GET /api/admin/clinics — list all clinics
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authError = await requireSuperAdmin(request);
+  if (authError) return authError;
+
   try {
     const allClinics = await db
       .select({
@@ -28,18 +46,21 @@ export async function GET() {
     return NextResponse.json(allClinics);
   } catch (error) {
     console.error("[Clinics API] Error fetching clinics:", error);
-    return NextResponse.json({ error: "Erro ao buscar clinicas" }, { status: 500 });
+    return NextResponse.json({ error: "Error fetching clinics" }, { status: 500 });
   }
 }
 
 // POST /api/admin/clinics — create a new clinic
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const authError = await requireSuperAdmin(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     const { name, slug, specialty, phone, email, city, state } = body;
 
     if (!name || !slug || !specialty || !phone || !email) {
-      return NextResponse.json({ error: "Campos obrigatorios: name, slug, specialty, phone, email" }, { status: 400 });
+      return NextResponse.json({ error: "Required fields: name, slug, specialty, phone, email" }, { status: 400 });
     }
 
     // Get owner (first super_admin)
@@ -50,7 +71,7 @@ export async function POST(request: Request) {
       .limit(1);
 
     if (!owner) {
-      return NextResponse.json({ error: "Nenhum super_admin encontrado" }, { status: 500 });
+      return NextResponse.json({ error: "No super_admin found" }, { status: 500 });
     }
 
     const [inserted] = await db
@@ -67,13 +88,13 @@ export async function POST(request: Request) {
       } as any)
       .returning({ id: clinics.id });
 
-    return NextResponse.json({ id: inserted.id, message: "Clinica criada com sucesso" }, { status: 201 });
+    return NextResponse.json({ id: inserted.id, message: "Clinic created successfully" }, { status: 201 });
   } catch (error: unknown) {
     const err = error as { message?: string; code?: string };
     if (err?.message?.includes("unique") || err?.code === "23505") {
-      return NextResponse.json({ error: "Slug ja esta em uso" }, { status: 409 });
+      return NextResponse.json({ error: "Slug is already in use" }, { status: 409 });
     }
     console.error("[Clinics API] Error creating clinic:", error);
-    return NextResponse.json({ error: "Erro ao criar clinica" }, { status: 500 });
+    return NextResponse.json({ error: "Error creating clinic" }, { status: 500 });
   }
 }

@@ -11,11 +11,11 @@ import { eq } from "drizzle-orm";
 
 export const checkCalendarTool = new DynamicStructuredTool({
   name: "check_calendar",
-  description: "Busca horários disponíveis no calendário da clínica para uma data específica.",
+  description: "Looks up available time slots on the clinic's calendar for a specific date.",
   schema: z.object({
-    clinicId: z.string().optional().describe("ID da clínica"),
-    professionalId: z.string().optional().describe("ID do profissional"),
-    date: z.string().describe("Data no formato YYYY-MM-DD"),
+    clinicId: z.string().optional().describe("Clinic ID"),
+    professionalId: z.string().optional().describe("Professional ID"),
+    date: z.string().describe("Date in YYYY-MM-DD format"),
   }),
   func: async ({ date }) => {
     const mockSlots = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:30"];
@@ -30,16 +30,16 @@ export const checkCalendarTool = new DynamicStructuredTool({
 
 export const createEventTool = new DynamicStructuredTool({
   name: "create_event",
-  description: "Cria um agendamento de consulta na clínica e registra o paciente no banco de dados.",
+  description: "Creates an appointment at the clinic and registers the patient in the database.",
   schema: z.object({
-    clinicId: z.string().optional().describe("ID da clínica"),
-    professionalId: z.string().optional().describe("ID do profissional"),
-    patientName: z.string().describe("Nome do paciente"),
-    patientPhone: z.string().describe("Telefone do paciente"),
-    patientEmail: z.string().optional().describe("Email do paciente"),
-    date: z.string().describe("Data no formato YYYY-MM-DD"),
-    time: z.string().describe("Horário no formato HH:MM"),
-    notes: z.string().optional().describe("Observações ou motivo da consulta"),
+    clinicId: z.string().optional().describe("Clinic ID"),
+    professionalId: z.string().optional().describe("Professional ID"),
+    patientName: z.string().describe("Patient's name"),
+    patientPhone: z.string().describe("Patient's phone number"),
+    patientEmail: z.string().optional().describe("Patient's email"),
+    date: z.string().describe("Date in YYYY-MM-DD format"),
+    time: z.string().describe("Time in HH:MM format"),
+    notes: z.string().optional().describe("Notes or reason for the appointment"),
   }),
   func: async ({ patientName, patientPhone, patientEmail, date, time, notes }) => {
     try {
@@ -58,11 +58,11 @@ export const createEventTool = new DynamicStructuredTool({
           } as any).returning();
         }
         [clinic] = await db.insert(clinics).values({
-          name: "Clínica MedBook Saúde",
-          slug: "medbook-saude",
+          name: "MedBook Health Clinic",
+          slug: "medbook-health",
           specialty: "general_practice",
-          phone: patientPhone || "(11) 99999-9999",
-          email: "contato@medbook.dev",
+          phone: patientPhone || "+1 555 123 4567",
+          email: "contact@medbook.dev",
           ownerId: owner.id,
         } as any).returning();
       }
@@ -72,13 +72,13 @@ export const createEventTool = new DynamicStructuredTool({
       if (!prof) {
         [prof] = await db.insert(professionals).values({
           clinicId: clinic.id,
-          name: "Dr. Carlos Eduardo",
-          specialty: "Clínica Geral",
+          name: "Dr. Alex Carter",
+          specialty: "General Practice",
         } as any).returning();
       }
 
       // 2. Get or create patient user
-      let patientEmailVal = patientEmail || `${patientPhone.replace(/\D/g, "")}@paciente.medbook`;
+      let patientEmailVal = patientEmail || `${patientPhone.replace(/\D/g, "")}@patient.medbook`;
       let [patientUser] = await db.select().from(users).where(eq(users.email, patientEmailVal)).limit(1);
       if (!patientUser) {
         [patientUser] = await db.insert(users).values({
@@ -101,7 +101,7 @@ export const createEventTool = new DynamicStructuredTool({
         startTime: time,
         endTime: time,
         status: "confirmed",
-        notes: notes || "Agendado via Chat MedBook",
+        notes: notes || "Scheduled via MedBook Chat",
       } as any).returning();
 
       // 4. Update chat session info
@@ -118,7 +118,7 @@ export const createEventTool = new DynamicStructuredTool({
 
       return JSON.stringify({
         success: true,
-        message: `Consulta agendada com sucesso para ${patientName} no dia ${date} às ${time}.`,
+        message: `Appointment scheduled successfully for ${patientName} on ${date} at ${time}.`,
         confirmationCode,
         appointmentId: appt.id,
       });
@@ -126,7 +126,7 @@ export const createEventTool = new DynamicStructuredTool({
       console.error("[CREATE EVENT ERROR]", error);
       return JSON.stringify({
         success: true,
-        message: `Consulta agendada para ${patientName} no dia ${date} às ${time}.`,
+        message: `Appointment scheduled for ${patientName} on ${date} at ${time}.`,
         confirmationCode: `MB-${Date.now().toString(36).toUpperCase()}`,
       });
     }
@@ -135,10 +135,10 @@ export const createEventTool = new DynamicStructuredTool({
 
 export const cancelEventTool = new DynamicStructuredTool({
   name: "cancel_event",
-  description: "Cancela uma consulta agendada.",
+  description: "Cancels a scheduled appointment.",
   schema: z.object({
-    appointmentId: z.string().describe("ID ou código da consulta a cancelar"),
-    reason: z.string().optional().describe("Motivo do cancelamento"),
+    appointmentId: z.string().describe("ID or code of the appointment to cancel"),
+    reason: z.string().optional().describe("Reason for cancellation"),
   }),
   func: async ({ appointmentId, reason }) => {
     try {
@@ -147,8 +147,8 @@ export const cancelEventTool = new DynamicStructuredTool({
 
     return JSON.stringify({
       success: true,
-      message: `Consulta ${appointmentId} cancelada com sucesso.`,
-      reason: reason || "Não informado.",
+      message: `Appointment ${appointmentId} cancelled successfully.`,
+      reason: reason || "Not specified.",
     });
   },
 });
@@ -157,23 +157,23 @@ export const cancelEventTool = new DynamicStructuredTool({
 
 export const queryKnowledgeBaseTool = new DynamicStructuredTool({
   name: "query_knowledge_base",
-  description: "Consulta a base de conhecimento da clínica para responder dúvidas sobre horários, convênios, serviços e regras.",
+  description: "Queries the clinic's knowledge base to answer questions about hours, insurance, services, and policies.",
   schema: z.object({
-    clinicId: z.string().optional().describe("ID da clínica"),
-    question: z.string().describe("Pergunta do paciente"),
+    clinicId: z.string().optional().describe("Clinic ID"),
+    question: z.string().describe("Patient's question"),
   }),
   func: async ({ clinicId, question }) => {
     try {
       const context = await getClinicContext(clinicId || "default");
       return JSON.stringify({
         success: true,
-        context: context || "Atendemos de Segunda a Sexta das 08h às 18h. Aceitamos convênios Bradesco, Unimed e SulAmérica.",
+        context: context || "We're open Monday to Friday from 8am to 6pm. We accept most major insurance plans.",
         question,
       });
     } catch (error) {
       return JSON.stringify({
         success: true,
-        context: "Atendemos de Segunda a Sexta das 08h às 18h. Aceitamos convênios e atendimento particular.",
+        context: "We're open Monday to Friday from 8am to 6pm. We accept insurance and self-pay patients.",
       });
     }
   },
@@ -183,34 +183,34 @@ export const queryKnowledgeBaseTool = new DynamicStructuredTool({
 
 export const savePreAnamnesisTool = new DynamicStructuredTool({
   name: "save_pre_anamnesis",
-  description: "Salva os dados da pré-anamnese coletados durante a conversa com o paciente.",
+  description: "Saves the pre-anamnesis data collected during the conversation with the patient.",
   schema: z.object({
-    fullName: z.string().describe("Nome completo do paciente"),
-    phone: z.string().describe("Telefone do paciente"),
-    chiefComplaint: z.string().describe("Queixa principal / sintomas relatados"),
-    symptomsDescription: z.string().optional().describe("Descrição detalhada dos sintomas"),
-    symptomsDuration: z.string().optional().describe("Duração dos sintomas"),
-    currentMedications: z.array(z.string()).optional().describe("Medicamentos atuais"),
-    allergies: z.array(z.string()).optional().describe("Alergias"),
-    chronicConditions: z.array(z.string()).optional().describe("Condições crônicas"),
+    fullName: z.string().describe("Patient's full name"),
+    phone: z.string().describe("Patient's phone number"),
+    chiefComplaint: z.string().describe("Chief complaint / reported symptoms"),
+    symptomsDescription: z.string().optional().describe("Detailed description of symptoms"),
+    symptomsDuration: z.string().optional().describe("Duration of symptoms"),
+    currentMedications: z.array(z.string()).optional().describe("Current medications"),
+    allergies: z.array(z.string()).optional().describe("Allergies"),
+    chronicConditions: z.array(z.string()).optional().describe("Chronic conditions"),
   }),
   func: async (data) => {
     try {
       // 1. Create Triage Session
       const [triage] = await db.insert(triageSessions).values({
         patientName: data.fullName,
-        patientEmail: `${data.phone.replace(/\D/g, "")}@paciente.medbook`,
+        patientEmail: `${data.phone.replace(/\D/g, "")}@patient.medbook`,
         mainSymptom: data.chiefComplaint,
-        evolutionTime: data.symptomsDuration || "Não informado",
-        relevantHistory: `Medicamentos: ${data.currentMedications?.join(", ") || "Nenhum"}; Alergias: ${data.allergies?.join(", ") || "Nenhuma"}`,
+        evolutionTime: data.symptomsDuration || "Not specified",
+        relevantHistory: `Medications: ${data.currentMedications?.join(", ") || "None"}; Allergies: ${data.allergies?.join(", ") || "None"}`,
         urgency: "GREEN",
-        aiSummary: `Queixa: ${data.chiefComplaint}. Sintomas: ${data.symptomsDescription || "Gerais"}.`,
+        aiSummary: `Complaint: ${data.chiefComplaint}. Symptoms: ${data.symptomsDescription || "General"}.`,
         status: "PENDING",
       } as any).returning();
 
       return JSON.stringify({
         success: true,
-        message: "Pré-anamnese e triagem registradas com sucesso.",
+        message: "Pre-anamnesis and triage recorded successfully.",
         triageId: triage.id,
         data,
       });
@@ -218,7 +218,7 @@ export const savePreAnamnesisTool = new DynamicStructuredTool({
       console.error("[SAVE PRE ANAMNESIS ERROR]", error);
       return JSON.stringify({
         success: true,
-        message: "Pré-anamnese registrada com sucesso.",
+        message: "Pre-anamnesis recorded successfully.",
         data,
       });
     }

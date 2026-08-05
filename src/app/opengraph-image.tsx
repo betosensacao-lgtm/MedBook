@@ -55,7 +55,7 @@ export default async function Image() {
             maxWidth: 500,
           }}
         >
-          Atendimento inteligente para clínicas modernas
+          Intelligent care for modern clinics
         </div>
       </div>
     ),

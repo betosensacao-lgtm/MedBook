@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       const responseText =
         typeof lastMessage?.content === "string"
           ? lastMessage.content
-          : "Desculpe, ocorreu um erro ao processar sua mensagem.";
+          : "Sorry, an error occurred while processing your message.";
 
       await sendMessageToMeta(msg.platform, msg.senderId, responseText);
     } catch (error) {
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
         await sendMessageToMeta(
           msg.platform,
           msg.senderId,
-          "Desculpe, ocorreu um erro interno. Tente novamente em instantes."
+          "Sorry, an internal error occurred. Please try again in a moment."
         );
       } catch (sendErr) {
         console.error("[Webhook] Failed to send error response:", sendErr);

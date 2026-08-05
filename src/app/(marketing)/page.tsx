@@ -32,7 +32,7 @@ export default function HomePage() {
               href="/chat"
               className="group relative flex items-center gap-2 text-sm bg-white text-slate-950 px-5 py-2.5 rounded-full font-semibold hover:bg-slate-200 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
             >
-              Testar Triagem
+              Try Triage
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </nav>
@@ -47,29 +47,29 @@ export default function HomePage() {
         </div>
         
         <h1 className="font-display text-5xl md:text-7xl font-bold max-w-5xl leading-tight tracking-tight animate-slide-up" style={{ animationDelay: "100ms" }}>
-          O futuro da triagem médica,{" "}
+          The future of medical triage,{" "}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-indigo-400">
-            totalmente autônomo.
+            fully autonomous.
           </span>
         </h1>
-        
+
         <p className="text-lg md:text-xl text-slate-400 max-w-3xl mt-8 leading-relaxed animate-slide-up" style={{ animationDelay: "200ms" }}>
-          O MedBook utiliza Inteligência Artificial avançada para analisar sintomas de pacientes recebidos via web, WhatsApp, ou sistemas de saúde integrados.
+          MedBook uses advanced Artificial Intelligence to analyze patient symptoms received via web, WhatsApp, or integrated healthcare systems.
         </p>
-        
+
         <div className="flex flex-col sm:flex-row gap-4 mt-12 animate-slide-up" style={{ animationDelay: "300ms" }}>
           <Link
             href="/chat"
             className="flex items-center justify-center gap-2 bg-gradient-to-r from-brand-600 to-indigo-600 text-white px-8 py-4 rounded-full font-semibold text-lg shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 hover:-translate-y-1 transition-all"
           >
-            Experimentar a IA
+            Try the AI
             <ArrowRight className="w-5 h-5" />
           </Link>
           <Link
             href="/admin/signup"
             className="flex items-center justify-center px-8 py-4 rounded-full font-semibold text-lg border border-white/10 hover:bg-white/5 transition-colors"
           >
-            Criar Clínica
+            Create Clinic
           </Link>
         </div>
 
@@ -78,22 +78,22 @@ export default function HomePage() {
           {[
             {
               icon: Stethoscope,
-              title: "Triagem Clínica Autônoma",
-              desc: "Avaliação de sintomas e classificação de urgência usando protocolos médicos programados.",
+              title: "Autonomous Clinical Triage",
+              desc: "Symptom assessment and urgency classification using programmed medical protocols.",
               color: "text-brand-400",
               bg: "bg-brand-400/10"
             },
             {
               icon: Workflow,
-              title: "Integração Universal",
-              desc: "Conecte CRMs legados, sistemas de email ou Zendesk diretamente ao nosso motor de Inteligência Artificial via webhooks.",
+              title: "Universal Integration",
+              desc: "Connect legacy CRMs, email systems, or Zendesk directly to our Artificial Intelligence engine via webhooks.",
               color: "text-indigo-400",
               bg: "bg-indigo-400/10"
             },
             {
               icon: Bot,
-              title: "Pré-anamnese Inteligente",
-              desc: "Coleta dados do paciente, histórico e queixa principal de forma amigável antes da consulta.",
+              title: "Smart Pre-Anamnesis",
+              desc: "Collects patient data, history, and chief complaint in a friendly way before the appointment.",
               color: "text-purple-400",
               bg: "bg-purple-400/10"
             },

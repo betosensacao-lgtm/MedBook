@@ -28,12 +28,12 @@ export function ClinicsTable({ clinics: initialClinics }: { clinics: Clinic[] })
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-100 text-gray-500 text-xs uppercase tracking-wider">
-            <th className="text-left px-5 py-3 font-medium">Nome</th>
-            <th className="text-left px-5 py-3 font-medium">Especialidade</th>
-            <th className="text-left px-5 py-3 font-medium">Local</th>
-            <th className="text-center px-5 py-3 font-medium">Verif</th>
-            <th className="text-right px-5 py-3 font-medium">Criada em</th>
-            <th className="text-right px-5 py-3 font-medium">Acoes</th>
+            <th className="text-left px-5 py-3 font-medium">Name</th>
+            <th className="text-left px-5 py-3 font-medium">Specialty</th>
+            <th className="text-left px-5 py-3 font-medium">Location</th>
+            <th className="text-center px-5 py-3 font-medium">Verified</th>
+            <th className="text-right px-5 py-3 font-medium">Created</th>
+            <th className="text-right px-5 py-3 font-medium">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
@@ -63,7 +63,7 @@ export function ClinicsTable({ clinics: initialClinics }: { clinics: Clinic[] })
                 )}
               </td>
               <td className="px-5 py-3 text-right text-gray-400 text-xs">
-                {new Date(c.createdAt).toLocaleDateString("pt-BR")}
+                {new Date(c.createdAt).toLocaleDateString("en-US")}
               </td>
               <td className="px-5 py-3 text-right">
                 <ClinicActions clinic={c} onUpdated={handleUpdated} />

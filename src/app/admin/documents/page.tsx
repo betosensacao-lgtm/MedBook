@@ -24,13 +24,13 @@ export default async function DocumentsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <PageHeader
-        title="Documentos"
-        description="Envie documentos para enriquecer a base de conhecimento da IA."
+        title="Documents"
+        description="Upload documents to enrich the AI's knowledge base."
       />
 
       <Card className="p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          Enviar Novo Documento
+          Upload New Document
         </h2>
         <DocumentUpload />
       </Card>
@@ -38,7 +38,7 @@ export default async function DocumentsPage() {
       <Card>
         <div className="px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900">
-            Documentos Enviados
+            Uploaded Documents
           </h2>
         </div>
         <CardContent className="p-0">
@@ -49,8 +49,8 @@ export default async function DocumentsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               }
-              title="Nenhum documento enviado"
-              description="Envie PDFs, DOCX ou TXT para a IA usar como base de conhecimento."
+              title="No documents uploaded yet"
+              description="Upload PDFs, DOCX, or TXT for the AI to use as a knowledge base."
             />
           ) : (
             <div className="divide-y divide-gray-100">
@@ -66,16 +66,16 @@ export default async function DocumentsPage() {
                       <div>
                         <p className="text-sm font-medium text-gray-900">{doc.name}</p>
                         <p className="text-xs text-gray-500">
-                          {doc.fileName} · {formatFileSize(doc.fileSize)} · {doc.chunkCount} pedacos
+                          {doc.fileName} · {formatFileSize(doc.fileSize)} · {doc.chunkCount} chunks
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
                       <Badge variant={doc.status === "ready" ? "success" : doc.status === "error" ? "danger" : "warning"}>
-                        {doc.status === "ready" ? "Pronto" : doc.status === "error" ? "Erro" : "Processando"}
+                        {doc.status === "ready" ? "Ready" : doc.status === "error" ? "Error" : "Processing"}
                       </Badge>
                       <span className="text-xs text-gray-400">
-                        {new Date(doc.createdAt).toLocaleDateString("pt-BR")}
+                        {new Date(doc.createdAt).toLocaleDateString("en-US")}
                       </span>
                     </div>
                   </div>

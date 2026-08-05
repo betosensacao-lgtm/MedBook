@@ -25,10 +25,10 @@ export default function ForgotPasswordPage() {
       if (res.ok) {
         setMessage({ type: "success", text: data.message });
       } else {
-        setMessage({ type: "error", text: data.error || "Erro ao processar" });
+        setMessage({ type: "error", text: data.error || "Error processing request" });
       }
     } catch {
-      setMessage({ type: "error", text: "Erro ao conectar" });
+      setMessage({ type: "error", text: "Connection error" });
     } finally {
       setLoading(false);
     }
@@ -41,9 +41,9 @@ export default function ForgotPasswordPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-teal-600 text-white text-2xl font-bold mb-4">
             M
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Redefinir senha</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Reset password</h1>
           <p className="text-gray-500 mt-2">
-            Informe seu email para receber o link de redefinicao
+            Enter your email to receive the reset link
           </p>
         </div>
 
@@ -57,7 +57,7 @@ export default function ForgotPasswordPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu@email.com"
+                placeholder="your@email.com"
                 autoFocus
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
               />
@@ -80,7 +80,7 @@ export default function ForgotPasswordPage() {
               disabled={loading || !email}
               className="w-full px-4 py-2.5 bg-teal-600 text-white text-sm font-medium rounded-xl hover:bg-teal-700 disabled:opacity-50 transition-colors"
             >
-              {loading ? "Enviando..." : "Enviar link de redefinicao"}
+              {loading ? "Sending..." : "Send reset link"}
             </button>
           </form>
 
@@ -89,7 +89,7 @@ export default function ForgotPasswordPage() {
               href="/admin/login"
               className="text-sm text-gray-500 hover:text-gray-700 hover:underline"
             >
-              Voltar para o login
+              Back to login
             </Link>
           </div>
         </div>

@@ -7,14 +7,14 @@ export async function POST(request: NextRequest) {
 
     if (!token || !newPassword) {
       return NextResponse.json(
-        { error: "Token e nova senha sao obrigatorios" },
+        { error: "Token and new password are required" },
         { status: 400 }
       );
     }
 
     if (newPassword.length < 8) {
       return NextResponse.json(
-        { error: "A senha deve ter pelo menos 8 caracteres" },
+        { error: "Password must be at least 8 characters" },
         { status: 400 }
       );
     }
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const userId = await verifyResetToken(token);
     if (!userId) {
       return NextResponse.json(
-        { error: "Token invalido ou expirado" },
+        { error: "Invalid or expired token" },
         { status: 400 }
       );
     }
@@ -33,12 +33,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Senha redefinida com sucesso",
+      message: "Password reset successfully",
     });
   } catch (error) {
     console.error("[Reset Password API] Error:", error);
     return NextResponse.json(
-      { error: "Erro interno do servidor" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

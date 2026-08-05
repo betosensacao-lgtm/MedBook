@@ -9,12 +9,12 @@ export type NodeName =
 
 export function routeAfterRouter(state: ChatStateType): NodeName {
   switch (state.intent) {
-    case "DUVIDA":
+    case "QUESTION":
       return "doubt_resolution";
-    case "AGENDAMENTO":
-    case "CANCELAMENTO":
+    case "SCHEDULING":
+    case "CANCELLATION":
       return "scheduling";
-    case "PRE_ANAMNESE":
+    case "PRE_ANAMNESIS":
       return "pre_anamnesis";
     default:
       return "doubt_resolution";

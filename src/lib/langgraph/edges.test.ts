@@ -15,7 +15,7 @@ function makeState(
     userId: "",
     sessionId: "",
     clinicId: "",
-    intent: "NAO_IDENTIFICADO",
+    intent: "UNKNOWN",
     calendarId: "",
     professionalName: "",
     preferredDate: null,
@@ -25,38 +25,38 @@ function makeState(
     clinicContext: "",
     completed: false,
     error: null,
-    locale: "pt",
+    locale: "en",
     ...overrides,
   };
 }
 
 describe("routeAfterRouter", () => {
-  it("routes DUVIDA to doubt_resolution", () => {
-    expect(routeAfterRouter(makeState({ intent: "DUVIDA" }))).toBe(
+  it("routes QUESTION to doubt_resolution", () => {
+    expect(routeAfterRouter(makeState({ intent: "QUESTION" }))).toBe(
       "doubt_resolution"
     );
   });
 
-  it("routes AGENDAMENTO to scheduling", () => {
-    expect(routeAfterRouter(makeState({ intent: "AGENDAMENTO" }))).toBe(
+  it("routes SCHEDULING to scheduling", () => {
+    expect(routeAfterRouter(makeState({ intent: "SCHEDULING" }))).toBe(
       "scheduling"
     );
   });
 
-  it("routes CANCELAMENTO to scheduling", () => {
-    expect(routeAfterRouter(makeState({ intent: "CANCELAMENTO" }))).toBe(
+  it("routes CANCELLATION to scheduling", () => {
+    expect(routeAfterRouter(makeState({ intent: "CANCELLATION" }))).toBe(
       "scheduling"
     );
   });
 
-  it("routes PRE_ANAMNESE to pre_anamnesis", () => {
-    expect(routeAfterRouter(makeState({ intent: "PRE_ANAMNESE" }))).toBe(
+  it("routes PRE_ANAMNESIS to pre_anamnesis", () => {
+    expect(routeAfterRouter(makeState({ intent: "PRE_ANAMNESIS" }))).toBe(
       "pre_anamnesis"
     );
   });
 
-  it("routes NAO_IDENTIFICADO to END", () => {
-    expect(routeAfterRouter(makeState({ intent: "NAO_IDENTIFICADO" }))).toBe(
+  it("routes UNKNOWN to END", () => {
+    expect(routeAfterRouter(makeState({ intent: "UNKNOWN" }))).toBe(
       "__end__"
     );
   });

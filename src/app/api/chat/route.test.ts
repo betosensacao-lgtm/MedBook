@@ -38,7 +38,7 @@ describe("POST /api/chat", () => {
 
     expect(res.status).toBe(400);
     const json = await res.json();
-    expect(json.error).toBe("Mensagem obrigatoria");
+    expect(json.error).toBe("Message is required");
   });
 
   it("returns 400 for whitespace-only message", async () => {
@@ -61,27 +61,27 @@ describe("POST /api/chat", () => {
 
   it("processes valid message and returns reply", async () => {
     mockRunChatGraph.mockResolvedValue({
-      messages: [{ content: "Como posso ajudar?" }],
+      messages: [{ content: "How can I help?" }],
     });
 
-    const res = await POST(createRequest({ message: "Ola" }));
+    const res = await POST(createRequest({ message: "Hi" }));
 
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.reply).toBe("Como posso ajudar?");
+    expect(json.reply).toBe("How can I help?");
     expect(json.sessionId).toBeDefined();
   });
 
   it("persists user and assistant messages", async () => {
     mockRunChatGraph.mockResolvedValue({
-      messages: [{ content: "Resposta" }],
+      messages: [{ content: "Reply" }],
     });
 
-    await POST(createRequest({ message: "teste" }));
+    await POST(createRequest({ message: "test" }));
 
     expect(mockSaveChatMessage).toHaveBeenCalledTimes(2);
-    expect(mockSaveChatMessage).toHaveBeenCalledWith(expect.any(String), "user", "teste");
-    expect(mockSaveChatMessage).toHaveBeenCalledWith(expect.any(String), "assistant", "Resposta");
+    expect(mockSaveChatMessage).toHaveBeenCalledWith(expect.any(String), "user", "test");
+    expect(mockSaveChatMessage).toHaveBeenCalledWith(expect.any(String), "assistant", "Reply");
   });
 
   it("uses provided sessionId", async () => {
@@ -89,7 +89,7 @@ describe("POST /api/chat", () => {
       messages: [{ content: "Ok" }],
     });
 
-    const res = await POST(createRequest({ message: "Oi", sessionId: "custom-session" }));
+    const res = await POST(createRequest({ message: "Hi", sessionId: "custom-session" }));
 
     const json = await res.json();
     expect(json.sessionId).toBe("custom-session");
@@ -97,13 +97,13 @@ describe("POST /api/chat", () => {
 
   it("loads chat history for existing session", async () => {
     mockGetChatMessages.mockResolvedValue([
-      { id: "1", sessionId: "s1", role: "user", content: "Oi", createdAt: new Date() },
+      { id: "1", sessionId: "s1", role: "user", content: "Hi", createdAt: new Date() },
     ]);
     mockRunChatGraph.mockResolvedValue({
-      messages: [{ content: "Resposta" }],
+      messages: [{ content: "Reply" }],
     });
 
-    await POST(createRequest({ message: "Tudo bem?", sessionId: "s1" }));
+    await POST(createRequest({ message: "How are you?", sessionId: "s1" }));
 
     expect(mockGetChatMessages).toHaveBeenCalledWith("s1");
   });
@@ -111,19 +111,19 @@ describe("POST /api/chat", () => {
   it("handles empty graph messages gracefully", async () => {
     mockRunChatGraph.mockResolvedValue({ messages: [] });
 
-    const res = await POST(createRequest({ message: "Ola" }));
+    const res = await POST(createRequest({ message: "Hi" }));
 
     const json = await res.json();
-    expect(json.reply).toBe("Desculpe, ocorreu um erro ao processar sua mensagem.");
+    expect(json.reply).toBe("Sorry, an error occurred while processing your message.");
   });
 
   it("returns 500 on graph error", async () => {
     mockRunChatGraph.mockRejectedValue(new Error("Graph error"));
 
-    const res = await POST(createRequest({ message: "Ola" }));
+    const res = await POST(createRequest({ message: "Hi" }));
 
     expect(res.status).toBe(500);
     const json = await res.json();
-    expect(json.error).toBe("Erro interno do servidor");
+    expect(json.error).toBe("Internal server error");
   });
 });

@@ -26,14 +26,14 @@ function LoginForm() {
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || "Credenciais invalidas");
+        setError(data.error || "Invalid credentials");
         return;
       }
 
       const from = searchParams.get("from") || "/admin/dashboard";
       router.push(from);
     } catch {
-      setError("Erro ao conectar");
+      setError("Connection error");
     } finally {
       setLoading(false);
     }
@@ -47,7 +47,7 @@ function LoginForm() {
             M
           </div>
           <h1 className="text-3xl font-bold text-gray-900">MedBook</h1>
-          <p className="text-gray-500 mt-2">Painel de administracao</p>
+          <p className="text-gray-500 mt-2">Admin panel</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
@@ -60,7 +60,7 @@ function LoginForm() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu@email.com"
+                placeholder="your@email.com"
                 autoFocus
                 autoComplete="email"
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
@@ -69,13 +69,13 @@ function LoginForm() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Senha
+                Password
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Digite sua senha"
+                placeholder="Enter your password"
                 autoComplete="current-password"
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
               />
@@ -98,10 +98,10 @@ function LoginForm() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Entrando...
+                  Signing in...
                 </span>
               ) : (
-                "Entrar"
+                "Sign In"
               )}
             </button>
           </form>
@@ -111,12 +111,12 @@ function LoginForm() {
               href="/admin/forgot-password"
               className="block text-sm text-teal-600 hover:text-teal-700 hover:underline"
             >
-              Esqueceu a senha?
+              Forgot your password?
             </Link>
             <p className="text-sm text-gray-500">
-              Nao tem conta?{" "}
+              Don&apos;t have an account?{" "}
               <Link href="/admin/signup" className="text-teal-600 font-medium hover:underline">
-                Cadastre-se gratis
+                Sign up for free
               </Link>
             </p>
           </div>

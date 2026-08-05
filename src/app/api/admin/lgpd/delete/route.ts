@@ -8,19 +8,19 @@ export async function POST(request: NextRequest) {
   try {
     const cookie = request.cookies.get(COOKIE_NAME);
     if (!cookie) {
-      return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
     const session = await verifySessionToken(cookie.value);
     if (!session) {
-      return NextResponse.json({ error: "Sessao invalida" }, { status: 401 });
+      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
     }
 
     const { email } = await request.json();
 
     if (!email) {
       return NextResponse.json(
-        { error: "Email e obrigatorio" },
+        { error: "Email is required" },
         { status: 400 }
       );
     }
@@ -63,14 +63,14 @@ export async function POST(request: NextRequest) {
     console.log(`[LGPD Delete] Deleted ${deletedSessions} sessions and ${deletedMessages} messages for ${email}`);
 
     return NextResponse.json({
-      message: `Dados excluidos com sucesso: ${deletedSessions} sessao(es) e ${deletedMessages} mensagem(ns).`,
+      message: `Data deleted successfully: ${deletedSessions} session(s) and ${deletedMessages} message(s).`,
       deletedSessions,
       deletedMessages,
     });
   } catch (error) {
     console.error("[LGPD Delete API] Error:", error);
     return NextResponse.json(
-      { error: "Erro ao excluir dados" },
+      { error: "Error deleting data" },
       { status: 500 }
     );
   }

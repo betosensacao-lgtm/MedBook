@@ -9,7 +9,7 @@ export async function upsertContextEntry(clinicId: string, key: string, content:
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Erro ao salvar",
+      error: error instanceof Error ? error.message : "Error saving",
     };
   }
 }

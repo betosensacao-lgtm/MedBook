@@ -1,89 +1,81 @@
 # MedBook — AGENTS.md
 
-## Comandos essenciais
+## Essential commands
 
-| Comando | Descrição |
+| Command | Description |
 |---------|-----------|
-| `pnpm dev` | Servidor dev Next.js |
-| `pnpm build` | Build de producao (`ignoreBuildErrors: true` — erros TS nao bloqueiam) |
+| `pnpm dev` | Next.js dev server |
+| `pnpm build` | Production build |
 | `pnpm lint` | ESLint (Next.js) |
 | `pnpm test` | Jest (jsdom, ts-jest) |
-| `pnpm db:generate` | Gera migration SQL com Drizzle Kit |
-| `pnpm db:migrate` | Aplica migrations no banco |
-| `pnpm db:studio` | Drizzle Studio (navegador de dados) |
-| `pnpm seed-plans` | Popula tabela `pricing_plans` (3 tiers) |
-| `pnpm seed-demo` | Cria 20 sessoes de chat demo para testes |
-| `pnpm seed-admin` | Cria/atualiza admin user no banco |
-| `pnpm seed-stripe-products` | Cria produtos e precos no Stripe + atualiza DB |
-| `pnpm health` | Verifica saude do sistema (DB, env vars, deploy, Stripe) |
-| `pnpm health:fix` | Verifica + auto-corrige problemas encontrados |
+| `pnpm db:generate` | Generate SQL migrations with Drizzle Kit |
+| `pnpm db:migrate` | Apply migrations to the database |
+| `pnpm db:studio` | Drizzle Studio (data browser) |
+| `pnpm seed-demo` | Creates 20 demo chat sessions for testing |
+| `pnpm seed-admin` | Creates/updates the admin user in the database |
+| `pnpm health` | Checks system health (DB, env vars, deploy) |
+| `pnpm health:fix` | Checks + auto-fixes issues found |
 
 ## Framework & toolchain
 
 - **Next.js 16** App Router, `src/` dir, `@/*` → `src/*`
-- **Drizzle ORM** + Supabase PostgreSQL. Migrations usam `DIRECT_URL` (pooler nao funciona). Runtime usa `DATABASE_URL` (pooler porta 6543, `prepare: false`).
-- **LangGraph.js** — agente conversacional. Grafo em `src/lib/langgraph/` com 3 nodes: `doubt_resolution`, `scheduling`, `pre_anamnesis`. Router node classifica intencao antes de rotear.
-- **Google Calendar API** — agendamento via service account. Client em `src/lib/calendar/google.ts`.
-- **Web Chat** — novo fluxo. Chat standalone em `/chat` e widget embed via iframe em `/chat/embed`. Usa o mesmo agente LangGraph, persistencia no Supabase (tabelas `chat_sessions` + `chat_messages`).
-- **Meta API (deferido)** — codigo WhatsApp/IG/FB existe em `src/lib/meta/` e `src/app/api/webhook/route.ts` mas nao esta ativo. Webhook responde ao GET verify mas nao envia mensagens (WABA sem numero verificado).
+- **Drizzle ORM** + Supabase PostgreSQL. Migrations use `DIRECT_URL` (the pooler doesn't work for migrations). Runtime uses `DATABASE_URL` (pooler, port 6543, `prepare: false`).
+- **LangGraph.js** — the conversational agent. Graph lives in `src/lib/langgraph/` with 4 nodes: `router`, `doubt_resolution`, `scheduling`, `pre_anamnesis`. The router node classifies intent before routing.
+- **Scheduling tools** — appointment scheduling is handled by mock/DB-backed tools in `src/lib/langgraph/tools.ts` (`check_calendar`, `create_event`, `cancel_event`). There is no external calendar provider integration.
+- **Web Chat** — standalone chat at `/chat` and an embeddable widget via iframe at `/chat/embed`. Uses the same LangGraph agent, persisted in Supabase (`chat_sessions` + `chat_messages` tables).
+- **Meta API (deferred)** — WhatsApp/IG/FB code exists in `src/lib/meta/` and `src/app/api/webhook/route.ts` but isn't active in production. The webhook answers the GET verify challenge but doesn't send messages (no verified WABA number).
 
-## Rotas atuais
+## Current routes
 
 ```
-/                   → redirect para /admin
-/admin              → Visao de agendamentos (Google Calendar)
-/admin/contexto     → Gestao da base de conhecimento da IA
-/admin/billing      → Pagina de faturamento e assinatura
-/chat               → Chat web standalone
-/chat/embed         → Chat embed (iframe snippet)
-/api/chat           → POST endpoint do chat (message + sessionId → reply)
-/api/webhook        → Webhook Meta (GET verify — preparado, nao ativo)
-/admin/signup       → Cadastro publico de nova clinica
-/api/admin/signup   → POST: cria clinica + admin + auto-login
-/api/admin/me       → GET: retorna usuario logado
-/api/health         → Health check (DB + tabelas + RLS)
-/api/stripe/create-checkout-session → POST: cria sessao Stripe Checkout
-/api/stripe/create-portal-session   → POST: cria sessao Stripe Customer Portal
-/api/stripe/webhook                 → POST: webhook Stripe (assinaturas, pagamentos)
-/pricing            → Pagina publica de planos e precos
-/admin/billing      → Pagina de faturamento e assinatura
+/                        → Public marketing landing page
+/admin                   → Appointments & completed-visits overview
+/admin/dashboard         → Admin stats dashboard
+/admin/patients          → Patient list
+/admin/analytics         → Chat analytics
+/admin/context            → Clinic knowledge base management (AI context)
+/admin/documents          → Document upload for the AI knowledge base
+/admin/billing            → WhatsApp Business integration setup guide
+/admin/lgpd                → Data privacy: export/delete requests, consent
+/admin/super              → Super admin: clinics + system users
+/chat                     → Standalone web chat
+/chat/embed               → Embeddable chat (iframe snippet)
+/api/chat                 → POST endpoint for the chat (message + sessionId → reply)
+/api/webhook               → Meta webhook (GET verify — wired up, not active)
+/admin/signup              → Public signup for a new clinic
+/api/admin/signup          → POST: creates clinic + admin + auto-login
+/api/admin/me               → GET: returns the logged-in user
+/api/health                 → Health check (DB + tables + RLS)
 ```
 
-## Pontos de atencao
+## Things to watch out for
 
-- **`strict: false`** no `tsconfig.json` — tipos relaxados, mas evite `any`.
-- **`ignoreBuildErrors: true`** no `next.config.ts` — build nunca falha por TS, mas erros aparecem no log.
-- **Middleware** (`src/proxy.ts`) protege rotas `/admin/:path*`. Rotas publicas: login, signup, forgot/reset password. Le o cookie `admin_session` e valida JWT. (Next.js 16 usa `proxy.ts`, nao `middleware.ts`)
-- **README.md** descreve arquitetura SaaS antiga (Stripe, Resend, i18n, cron reminders). Projeto real e chatbot web-first com Google Calendar.
-- **Schema** (`src/db/schema.ts`) ainda tem colunas legadas: `stripeCustomerId`, `subscriptionId`, `supabaseId`. Nao sao usadas mas estao no banco.
-- **`src/lib/langgraph/persistence.ts`** exporta SqliteSaver mas `graph.ts` usa `MemorySaver` direto. O persistence nao esta conectado.
-- **`.github/workflows/ci.yml`** — CI/CD com GitHub Actions: roda lint + testes em todo push para main. Health check automático após deploy.
-- **Sentry** — tracking de erros (client + server). Ativo apenas se `SENTRY_DSN` estiver configurada. Config em `sentry.client.config.ts`, `sentry.server.config.ts`.
-- **Variaveis de ambiente** em `.env.local` (gitignorado). `GOOGLE_CALENDAR_PRIVATE_KEY` precisa de `replace(/\\n/g, "\n")` (ja tratado em `google.ts:23`).
-- **Testes** sao Jest puro, apenas unitarios. Testes atuais em `src/lib/*.test.ts` cobrem utils e edge routing do grafo.
+- **`strict: false`** in `tsconfig.json` — relaxed typing, but avoid `any` where practical.
+- **Middleware** (`src/proxy.ts`) protects `/admin/:path*` routes. Public routes: login, signup, forgot/reset password. Reads the `admin_session` cookie and validates the JWT. (Next.js 16 uses `proxy.ts`, not `middleware.ts`.)
+- **`src/db/schema.ts`** still has a `supabaseId` column on `users` from an earlier Supabase Auth integration — it's populated with a generated UUID rather than a real Supabase user id.
+- **Sentry** — error tracking (client + server + edge). Only active if `SENTRY_DSN` is configured. Config in `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`.
+- **CI** — `.github/workflows/ci.yml` and `test.yml` run lint + tests on push.
+- **Tests** are plain Jest, unit-level only. Current tests in `src/**/*.test.ts` cover utils, chat route, chat session helpers, and graph edge routing.
+- Stripe/billing and Google Calendar integrations that appeared in earlier iterations of this project have been removed — the app is chat-first, with scheduling handled entirely through the LangGraph tools and no payment processing.
 
-## Variaveis de ambiente necessarias
+## Required environment variables
 
 ```env
-DATABASE_URL=               # Supabase pooler (porta 6543, prepare: false)
-DIRECT_URL=                 # Supabase direto (porta 5432, para migrations)
-GROQ_API_KEY=               # Chave da API Groq
-GOOGLE_CALENDAR_CLIENT_EMAIL=  # Service account email
-GOOGLE_CALENDAR_PRIVATE_KEY=   # Chave privada (com \n literais)
-GOOGLE_CALENDAR_ID=         # ID do calendario Google
-CLINIC_ID=                  # ID da clinica no banco
-NEXT_PUBLIC_APP_URL=        # URL do deploy (ex: https://medbook.vercel.app)
+DATABASE_URL=               # Supabase pooler (port 6543, prepare: false)
+DIRECT_URL=                 # Supabase direct connection (port 5432, for migrations)
+GROQ_API_KEY=                # Groq API key
+CLINIC_ID=                   # Default clinic ID in the database
+NEXT_PUBLIC_APP_URL=         # Deploy URL (e.g. https://medbook-amber.vercel.app)
+JWT_SECRET=                  # Admin session signing secret
+RESEND_API_KEY=              # Transactional email
+EMAIL_FROM=                  # Sender address for emails
+CRON_SECRET=                 # Bearer token for cron/health endpoints
 
-# Stripe (checkout e billing)
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
-
-# Sentry (tracking de erros — opcional)
+# Sentry (error tracking — optional)
 SENTRY_DSN=
 NEXT_PUBLIC_SENTRY_DSN=
 
-# Meta/WhatsApp (deferido — nao obrigatorio para o chat web)
+# Meta/WhatsApp (deferred — not required for the web chat)
 META_APP_SECRET=
 META_WEBHOOK_VERIFY_TOKEN=
 WHATSAPP_TOKEN=
@@ -93,34 +85,35 @@ INSTAGRAM_USER_ID=
 FACEBOOK_PAGE_ID=
 ```
 
-## Fluxo de trabalho
+## Workflow
 
-1. Editar schema em `src/db/schema.ts`
+1. Edit the schema in `src/db/schema.ts`
 2. `pnpm db:generate` + `pnpm db:migrate`
-3. `pnpm test` (testes unitarios existentes)
-4. git add/commit/push → Vercel deploy automatico
+3. `pnpm test` (existing unit tests)
+4. git add/commit/push → deploy via `vercel --prod` (Git integration is disconnected; see project memory)
 
-## Estrutura dos modulos principais
+## Main module map
 
-| Diretorio | Responsabilidade |
+| Directory | Responsibility |
 |-----------|-----------------|
-| `src/lib/langgraph/` | Grafo do agente (state, nodes, edges, tools, graph) |
-| `src/lib/chat/` | Persistencia de sessoes do chat web (session.ts) |
-| `src/lib/calendar/` | Integracao Google Calendar API |
-| `src/lib/rag/` | Base de conhecimento da clinica (tabela `clinic_context`) |
-| `src/lib/meta/` | Normalizacao e envio Meta (deferido) |
-| `src/lib/ai.ts` | Cliente Groq (OpenAI-compatible) com Proxy lazy |
-| `src/db/schema.ts` | Schema Drizzle (todas as tabelas) |
-| `src/app/chat/` | Chat web standalone + embed |
-| `src/app/api/chat/` | API do chat web |
-| `src/app/admin/` | Interface administrativa |
-| `src/app/api/webhook/` | Webhook Meta (deferido) |
-| `src/components/chat/` | Componentes de UI do chat (ChatMessages) |
+| `src/lib/langgraph/` | The agent graph (state, nodes, edges, tools, persistence, graph) |
+| `src/lib/chat/` | Web chat session persistence (`session.ts`, `dashboard.ts`) |
+| `src/lib/rag/` | Clinic knowledge base (`clinic_context` table) |
+| `src/lib/security/` | Prompt-injection guardrails |
+| `src/lib/documents/` | Document upload parsing for the knowledge base |
+| `src/lib/meta/` | Meta message normalization and sending (deferred) |
+| `src/lib/ai.ts` | Groq client (OpenAI-compatible) with a lazy Proxy |
+| `src/db/schema.ts` | Drizzle schema (all tables) |
+| `src/app/chat/` | Standalone web chat + embed |
+| `src/app/api/chat/` | Web chat API |
+| `src/app/admin/` | Admin interface |
+| `src/app/api/webhook/` | Meta webhook (deferred) |
+| `src/components/chat/` | Chat UI components (`ChatMessages`) |
 
-## Embed via iframe
+## Embedding via iframe
 
 ```html
-<iframe src="https://medbook.vercel.app/chat/embed"
+<iframe src="https://medbook-amber.vercel.app/chat/embed"
   style="position:fixed;bottom:20px;right:20px;width:380px;height:600px;border:none;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.15);z-index:9999">
 </iframe>
 ```

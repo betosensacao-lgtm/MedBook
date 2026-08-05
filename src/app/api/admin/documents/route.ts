@@ -18,18 +18,18 @@ export async function POST(request: NextRequest) {
     // Verify authentication
     const cookie = request.cookies.get(COOKIE_NAME);
     if (!cookie) {
-      return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
     const session = await verifySessionToken(cookie.value);
     if (!session) {
-      return NextResponse.json({ error: "Sessao invalida" }, { status: 401 });
+      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
     }
 
     const clinicId = session.clinicId;
     if (!clinicId) {
       return NextResponse.json(
-        { error: "Clinica nao associada" },
+        { error: "No clinic associated" },
         { status: 400 }
       );
     }
@@ -39,14 +39,14 @@ export async function POST(request: NextRequest) {
 
     if (!file) {
       return NextResponse.json(
-        { error: "Nenhum arquivo enviado" },
+        { error: "No file uploaded" },
         { status: 400 }
       );
     }
 
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: "Arquivo muito grande (maximo 10MB)" },
+        { error: "File too large (10MB max)" },
         { status: 400 }
       );
     }
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     if (!content || content.trim().length === 0) {
       return NextResponse.json(
-        { error: "Nao foi possivel extrair texto do arquivo" },
+        { error: "Could not extract text from the file" },
         { status: 400 }
       );
     }
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("[Documents API] Error:", error);
     return NextResponse.json(
-      { error: "Erro ao processar arquivo" },
+      { error: "Error processing file" },
       { status: 500 }
     );
   }
@@ -105,12 +105,12 @@ export async function GET(request: NextRequest) {
   try {
     const cookie = request.cookies.get(COOKIE_NAME);
     if (!cookie) {
-      return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
     const session = await verifySessionToken(cookie.value);
     if (!session) {
-      return NextResponse.json({ error: "Sessao invalida" }, { status: 401 });
+      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
     }
 
     const clinicId = session.clinicId;
@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("[Documents API] Error:", error);
     return NextResponse.json(
-      { error: "Erro ao listar documentos" },
+      { error: "Error listing documents" },
       { status: 500 }
     );
   }

@@ -8,26 +8,26 @@ export async function POST(request: NextRequest) {
     // Verify the requesting user is a super_admin
     const cookie = request.cookies.get(COOKIE_NAME);
     if (!cookie) {
-      return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
     const session = await verifySessionToken(cookie.value);
     if (!session || session.role !== "super_admin") {
-      return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     }
 
     const { email, password, name, role, clinicId } = await request.json();
 
     if (!email || !password || !name) {
       return NextResponse.json(
-        { error: "Email, senha e nome sao obrigatorios" },
+        { error: "Email, password, and name are required" },
         { status: 400 }
       );
     }
 
     if (password.length < 8) {
       return NextResponse.json(
-        { error: "A senha deve ter pelo menos 8 caracteres" },
+        { error: "Password must be at least 8 characters" },
         { status: 400 }
       );
     }
@@ -53,8 +53,8 @@ export async function POST(request: NextRequest) {
     console.error("[Create User API] Error:", error);
     const message =
       error instanceof Error && error.message.includes("unique")
-        ? "Email ja cadastrado"
-      : "Erro interno do servidor";
+        ? "Email already registered"
+      : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -38,7 +38,7 @@ export function PatientSearch({ initialSearch }: PatientSearchProps) {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar por nome, telefone ou email..."
+          placeholder="Search by name, phone, or email..."
           className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
         />
       </div>
@@ -46,14 +46,14 @@ export function PatientSearch({ initialSearch }: PatientSearchProps) {
         type="submit"
         className="px-4 py-2.5 bg-teal-600 text-white text-sm font-medium rounded-xl hover:bg-teal-700 transition-colors"
       >
-        Buscar
+        Search
       </button>
       {initialSearch && (
         <a
           href="/admin/patients"
           className="px-4 py-2.5 border border-gray-300 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
         >
-          Limpar
+          Clear
         </a>
       )}
     </form>

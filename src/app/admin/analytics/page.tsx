@@ -95,33 +95,33 @@ export default async function AnalyticsPage() {
     <div className="max-w-6xl mx-auto space-y-8">
       <PageHeader
         title="Analytics"
-        description={`Metricas dos ultimos 14 dias`}
+        description={`Metrics for the last 14 days`}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
-          label="Conversas Hoje"
+          label="Conversations Today"
           value={analytics.sessionsToday}
           variant="highlight"
           icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>}
         />
         <StatCard
-          label="Mensagens Hoje"
+          label="Messages Today"
           value={analytics.messagesToday}
           icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>}
         />
         <StatCard
-          label="Total Conversas"
+          label="Total Conversations"
           value={analytics.totalSessions}
           icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
         />
         <StatCard
-          label="Media Msgs/Conversa"
+          label="Avg Msgs/Conversation"
           value={analytics.avgMessagesPerSession}
           icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>}
         />
         <StatCard
-          label="Hora de Pico"
+          label="Peak Hour"
           value={`${analytics.peakHour}h`}
           icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
         />
@@ -130,8 +130,8 @@ export default async function AnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <h2 className="text-lg font-semibold text-gray-900">Distribuicao por Hora (7 dias)</h2>
-            <p className="text-sm text-gray-500">Volume de conversas por horario do dia</p>
+            <h2 className="text-lg font-semibold text-gray-900">Distribution by Hour (7 days)</h2>
+            <p className="text-sm text-gray-500">Conversation volume by hour of day</p>
           </CardHeader>
           <CardContent>
             <BarChart data={hourlyData} maxVal={hourlyMax} />
@@ -140,8 +140,8 @@ export default async function AnalyticsPage() {
 
         <Card>
           <CardHeader>
-            <h2 className="text-lg font-semibold text-gray-900">Tendencia Diaria (14 dias)</h2>
-            <p className="text-sm text-gray-500">Mensagens por dia</p>
+            <h2 className="text-lg font-semibold text-gray-900">Daily Trend (14 days)</h2>
+            <p className="text-sm text-gray-500">Messages per day</p>
           </CardHeader>
           <CardContent>
             <LineChart data={dailyData} />
@@ -155,11 +155,11 @@ export default async function AnalyticsPage() {
 
       <Card>
         <CardHeader>
-          <h2 className="text-lg font-semibold text-gray-900">Top Pacientes</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Top Patients</h2>
         </CardHeader>
         <CardContent className="p-0">
           {analytics.topPatients.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">Nenhum paciente ainda.</div>
+            <div className="p-8 text-center text-gray-500">No patients yet.</div>
           ) : (
             <div className="divide-y divide-gray-100">
               {analytics.topPatients.map((p, i) => (
@@ -169,11 +169,11 @@ export default async function AnalyticsPage() {
                       {i + 1}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{p.name || "Nao informado"}</p>
+                      <p className="text-sm font-medium text-gray-900">{p.name || "Not provided"}</p>
                       <p className="text-xs text-gray-500">{p.phone || "—"}</p>
                     </div>
                   </div>
-                  <Badge variant="info">{p.count} conversas</Badge>
+                  <Badge variant="info">{p.count} conversations</Badge>
                 </div>
               ))}
             </div>

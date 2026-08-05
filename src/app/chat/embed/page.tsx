@@ -23,7 +23,7 @@ export default function ChatEmbedPage() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Ola! Sou o assistente virtual da clinica. Como posso ajudar?",
+      content: "Hi! I'm the clinic's virtual assistant. How can I help?",
     },
   ]);
   const [input, setInput] = useState("");
@@ -62,7 +62,7 @@ export default function ChatEmbedPage() {
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Erro de conexao. Tente novamente." },
+        { role: "assistant", content: "Connection error. Please try again." },
       ]);
     } finally {
       setLoading(false);
@@ -72,7 +72,7 @@ export default function ChatEmbedPage() {
   return (
     <div className="h-full flex flex-col bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden" style={{ height: "100dvh" }}>
       <div className="bg-teal-700 px-4 py-3 flex items-center justify-between shrink-0">
-        <span className="text-sm font-medium text-white">MedBook - Assistente</span>
+        <span className="text-sm font-medium text-white">MedBook - Assistant</span>
         <button
           onClick={() => {
             const sid = crypto.randomUUID();
@@ -82,7 +82,7 @@ export default function ChatEmbedPage() {
           }}
           className="text-xs text-teal-100 hover:text-white transition-colors"
         >
-          Nova conversa
+          New conversation
         </button>
       </div>
 
@@ -99,7 +99,7 @@ export default function ChatEmbedPage() {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Digite sua mensagem..."
+            placeholder="Type your message..."
             disabled={loading}
             className="flex-1 px-3 py-2 rounded-lg border border-gray-300 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50"
           />
@@ -108,7 +108,7 @@ export default function ChatEmbedPage() {
             disabled={loading || !input.trim()}
             className="px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50 transition-colors shrink-0"
           >
-            Enviar
+            Send
           </button>
         </form>
       </div>

@@ -51,7 +51,7 @@ const defaultState: ChatGraphInput = {
   userId: "",
   sessionId: "",
   clinicId: "",
-  intent: "NAO_IDENTIFICADO",
+  intent: "UNKNOWN",
   calendarId: "",
   professionalName: "",
   preferredDate: null,
@@ -61,7 +61,7 @@ const defaultState: ChatGraphInput = {
   clinicContext: "",
   completed: false,
   error: null,
-  locale: "pt",
+  locale: "en",
 };
 
 export async function runChatGraph(

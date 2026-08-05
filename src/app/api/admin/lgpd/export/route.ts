@@ -8,19 +8,19 @@ export async function POST(request: NextRequest) {
   try {
     const cookie = request.cookies.get(COOKIE_NAME);
     if (!cookie) {
-      return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
     const session = await verifySessionToken(cookie.value);
     if (!session) {
-      return NextResponse.json({ error: "Sessao invalida" }, { status: 401 });
+      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
     }
 
     const { email } = await request.json();
 
     if (!email) {
       return NextResponse.json(
-        { error: "Email e obrigatorio" },
+        { error: "Email is required" },
         { status: 400 }
       );
     }
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     if (sessions.length === 0) {
       return NextResponse.json({
-        message: "Nenhum dado encontrado para este email.",
+        message: "No data found for this email.",
       });
     }
 
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     console.log(`[LGPD Export] Data export request for ${email}: ${sessions.length} sessions`);
 
     return NextResponse.json({
-      message: `Solicitacao registrada. Encontrados ${sessions.length} registro(s). Os dados serao enviados por email em ate 48h.`,
+      message: `Request submitted. Found ${sessions.length} record(s). Your data will be sent by email within 48h.`,
       recordCount: sessions.length,
       // In dev, return the data directly
       ...(process.env.NODE_ENV !== "production" && { data: userData }),
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("[LGPD Export API] Error:", error);
     return NextResponse.json(
-      { error: "Erro ao processar solicitacao" },
+      { error: "Error processing request" },
       { status: 500 }
     );
   }

@@ -1,10 +1,10 @@
 /**
- * Persistência de sessão para o LangGraph.
+ * Session persistence for LangGraph.
  *
- * Usa SqliteSaver para persistir sessões em disco.
- * As sessões sobrevivem a reinícios do servidor.
+ * Uses PostgresSaver to persist sessions to the database.
+ * Sessions survive server restarts.
  *
- * Uso:
+ * Usage:
  *   import { getCheckpointer, getConfig } from "@/lib/langgraph/persistence";
  *   const result = await graph.invoke(input, getConfig("session-id"));
  */
@@ -24,7 +24,7 @@ export function getCheckpointer(): BaseCheckpointSaver {
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     _checkpointer = new PostgresSaver(pool);
     _setupPromise = (_checkpointer as any).setup();
-    console.log("[Persistence] PostgresSaver conectado (pg)");
+    console.log("[Persistence] PostgresSaver connected (pg)");
   }
   return _checkpointer;
 }

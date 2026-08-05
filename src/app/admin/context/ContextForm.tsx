@@ -6,21 +6,21 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
 const PRESET_KEYS = [
-  "horarios_de_funcionamento",
-  "convenios_aceitos",
-  "servicos_oferecidos",
-  "localizacao",
-  "regras_e_politicas",
-  "informacoes_gerais",
+  "business_hours",
+  "accepted_insurance",
+  "services_offered",
+  "location",
+  "rules_and_policies",
+  "general_information",
 ];
 
 const KEY_LABELS: Record<string, string> = {
-  horarios_de_funcionamento: "Horarios de Funcionamento",
-  convenios_aceitos: "Convenios Aceitos",
-  servicos_oferecidos: "Servicos Oferecidos",
-  localizacao: "Localizacao e Contato",
-  regras_e_politicas: "Regras e Politicas",
-  informacoes_gerais: "Informacoes Gerais",
+  business_hours: "Business Hours",
+  accepted_insurance: "Accepted Insurance",
+  services_offered: "Services Offered",
+  location: "Location & Contact",
+  rules_and_policies: "Rules & Policies",
+  general_information: "General Information",
 };
 
 interface Props {
@@ -42,20 +42,20 @@ export function ContextForm({ clinicId }: Props) {
 
     const finalKey = useCustom ? customKey.trim() : key;
     if (!finalKey || !content.trim()) {
-      setMessage({ type: "error", text: "Preencha todos os campos." });
+      setMessage({ type: "error", text: "Fill in all fields." });
       setSaving(false);
       return;
     }
 
     try {
       await upsertContextEntry(clinicId, finalKey, content.trim());
-      setMessage({ type: "success", text: "Informacao salva com sucesso!" });
+      setMessage({ type: "success", text: "Information saved successfully!" });
       setContent("");
       setCustomKey("");
     } catch (err) {
       setMessage({
         type: "error",
-        text: err instanceof Error ? err.message : "Erro ao salvar.",
+        text: err instanceof Error ? err.message : "Error saving.",
       });
     } finally {
       setSaving(false);
@@ -66,7 +66,7 @@ export function ContextForm({ clinicId }: Props) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">
-          Tipo de Informacao
+          Information Type
         </label>
         <div className="flex gap-2 mb-3">
           <button
@@ -78,7 +78,7 @@ export function ContextForm({ clinicId }: Props) {
                 : "border-gray-200 text-gray-500 hover:border-gray-300"
             }`}
           >
-            Predefinido
+            Preset
           </button>
           <button
             type="button"
@@ -89,7 +89,7 @@ export function ContextForm({ clinicId }: Props) {
                 : "border-gray-200 text-gray-500 hover:border-gray-300"
             }`}
           >
-            Personalizado
+            Custom
           </button>
         </div>
 
@@ -97,7 +97,7 @@ export function ContextForm({ clinicId }: Props) {
           <Input
             value={customKey}
             onChange={(e) => setCustomKey(e.target.value)}
-            placeholder="Ex: promocoes, avisos_importantes"
+            placeholder="E.g.: promotions, important_notices"
           />
         ) : (
           <select
@@ -105,7 +105,7 @@ export function ContextForm({ clinicId }: Props) {
             onChange={(e) => setKey(e.target.value)}
             className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
           >
-            <option value="">Selecione...</option>
+            <option value="">Select...</option>
             {PRESET_KEYS.map((k) => (
               <option key={k} value={k}>
                 {KEY_LABELS[k]}
@@ -117,16 +117,16 @@ export function ContextForm({ clinicId }: Props) {
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">
-          Conteudo
+          Content
         </label>
         <p className="text-xs text-gray-400 mb-2">
-          Escreva em texto livre. A IA usara estas informacoes para responder aos pacientes.
+          Write in free text. The AI will use this information to respond to patients.
         </p>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           rows={6}
-          placeholder="Ex: Atendemos de segunda a sexta das 8h as 18h e sabado das 8h as 12h..."
+          placeholder="E.g.: We're open Monday to Friday from 8am to 6pm and Saturday from 8am to noon..."
           className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-y transition-all"
         />
       </div>
@@ -144,7 +144,7 @@ export function ContextForm({ clinicId }: Props) {
       )}
 
       <Button type="submit" loading={saving} disabled={!content.trim()}>
-        Salvar
+        Save
       </Button>
     </form>
   );

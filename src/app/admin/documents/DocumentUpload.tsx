@@ -33,11 +33,11 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Erro ao enviar arquivo");
+        setError(data.error || "Error uploading file");
         return;
       }
 
-      setSuccess(`Arquivo "${file.name}" enviado com sucesso!`);
+      setSuccess(`File "${file.name}" uploaded successfully!`);
       onUploadComplete?.(data.document);
 
       // Reset file input
@@ -45,7 +45,7 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
         fileRef.current.value = "";
       }
     } catch {
-      setError("Erro ao conectar com o servidor");
+      setError("Error connecting to the server");
     } finally {
       setUploading(false);
     }
@@ -73,10 +73,10 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-900">
-              {uploading ? "Enviando..." : "Clique para enviar um arquivo"}
+              {uploading ? "Uploading..." : "Click to upload a file"}
             </p>
             <p className="text-xs text-gray-500 mt-1">
-              PDF, DOCX ou TXT (maximo 10MB)
+              PDF, DOCX, or TXT (max 10MB)
             </p>
           </div>
         </label>

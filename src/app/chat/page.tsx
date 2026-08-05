@@ -23,7 +23,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Ola! Sou o assistente virtual da clinica. Como posso ajudar? Posso esclarecer duvidas, agendar consultas ou coletar dados para pre-anamnese.",
+      content: "Hi! I'm the clinic's virtual assistant. How can I help? I can answer questions, schedule appointments, or collect pre-anamnesis information.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -62,7 +62,7 @@ export default function ChatPage() {
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Erro de conexao. Tente novamente." },
+        { role: "assistant", content: "Connection error. Please try again." },
       ]);
     } finally {
       setLoading(false);
@@ -81,13 +81,13 @@ export default function ChatPage() {
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-teal-700">MedBook</h1>
-          <p className="text-xs text-gray-400">Assistente virtual da clinica</p>
+          <p className="text-xs text-gray-400">Clinic virtual assistant</p>
         </div>
         <button
           onClick={newConversation}
           className="text-sm text-gray-500 hover:text-teal-600 transition-colors px-3 py-1.5 rounded-lg hover:bg-teal-50"
         >
-          Nova conversa
+          New conversation
         </button>
       </header>
 
@@ -104,7 +104,7 @@ export default function ChatPage() {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Digite sua mensagem..."
+            placeholder="Type your message..."
             disabled={loading}
             className="flex-1 px-4 py-3 rounded-xl border border-gray-300 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50"
           />
@@ -113,7 +113,7 @@ export default function ChatPage() {
             disabled={loading || !input.trim()}
             className="px-6 py-3 bg-teal-600 text-white text-sm font-medium rounded-xl hover:bg-teal-700 disabled:opacity-50 transition-colors"
           >
-            Enviar
+            Send
           </button>
         </form>
       </div>
