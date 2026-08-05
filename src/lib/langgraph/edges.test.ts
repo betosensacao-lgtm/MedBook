@@ -55,9 +55,9 @@ describe("routeAfterRouter", () => {
     );
   });
 
-  it("routes UNKNOWN to END", () => {
+  it("routes UNKNOWN to doubt_resolution (fallback so the patient still gets a reply)", () => {
     expect(routeAfterRouter(makeState({ intent: "UNKNOWN" }))).toBe(
-      "__end__"
+      "doubt_resolution"
     );
   });
 });
