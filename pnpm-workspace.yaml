@@ -6,3 +6,5 @@ allowBuilds:
   esbuild: true
   sharp: true
   unrs-resolver: true
+minimumReleaseAgeExclude:
+  - '@betosensacao-lgtm/agent-core@0.1.0'

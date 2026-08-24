@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { jwtVerify } from "jose";
-
-const COOKIE_NAME = "admin_session";
-const JWT_SECRET_RAW = process.env.JWT_SECRET || process.env.ADMIN_PASSWORD || "medbook-dev-secret-key-change-in-production";
-const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_RAW);
+import {
+  verifySessionToken,
+  DEFAULT_COOKIE_NAME as COOKIE_NAME,
+} from "@betosensacao-lgtm/agent-core";
 
 interface SessionPayload {
   userId: string;
@@ -13,14 +12,10 @@ interface SessionPayload {
   clinicId: string | null;
 }
 
-async function verifySessionToken(token: string): Promise<SessionPayload | null> {
-  try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
-    return payload as unknown as SessionPayload;
-  } catch {
-    return null;
-  }
-}
+// Este arquivo trazia sua própria cópia do encadeamento
+// `JWT_SECRET || ADMIN_PASSWORD || "<literal público>"` e sua própria
+// verificação, sem fixar o algoritmo. Passar pelo agent-core elimina o
+// fallback e garante que middleware e rotas validem sessão do mesmo jeito.
 
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -41,7 +36,7 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  const session = await verifySessionToken(cookie.value);
+  const session = await verifySessionToken<SessionPayload>(cookie.value);
   if (!session) {
     const loginUrl = new URL("/admin/login", request.url);
     loginUrl.searchParams.set("from", pathname);

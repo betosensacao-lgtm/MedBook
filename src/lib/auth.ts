@@ -1,27 +1,30 @@
-import { SignJWT, jwtVerify } from "jose";
-import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { eq, and, gt } from "drizzle-orm";
 import { db } from "@/db";
 import { adminUsers, passwordResetTokens } from "@/db/schema";
-import { eq, and, gt } from "drizzle-orm";
 
-const COOKIE_NAME = "admin_session";
-const JWT_SECRET_RAW = process.env.JWT_SECRET || process.env.ADMIN_PASSWORD || "medbook-dev-secret-key-change-in-production";
-const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_RAW);
-const TOKEN_EXPIRY = "24h";
-const RESET_TOKEN_EXPIRY_HOURS = 1;
+import {
+  verifySessionToken as verifyToken,
+  getSessionFromRequest as getSession,
+} from "@betosensacao-lgtm/agent-core";
 
-// ─── Password hashing ────────────────────────────────────────────────────────
+export {
+  hashPassword,
+  verifyPassword,
+  createSessionToken,
+  DEFAULT_COOKIE_NAME as COOKIE_NAME,
+} from "@betosensacao-lgtm/agent-core";
 
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 12);
-}
-
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(password, hash);
-}
-
-// ─── JWT Session tokens ──────────────────────────────────────────────────────
+/**
+ * O encadeamento anterior era:
+ *   JWT_SECRET || ADMIN_PASSWORD || "medbook-dev-secret-key-change-in-production"
+ *
+ * Em produção JWT_SECRET não estava configurada, então a chave que assinava
+ * as sessões era a SENHA DO ADMIN. Quem capturasse um token podia atacá-lo
+ * offline e recuperar a senha; quem soubesse a senha forjava qualquer
+ * sessão, inclusive super_admin. Corrigido por variável de ambiente em
+ * 2026-08-24; o fallback sai do código aqui.
+ */
 
 export interface SessionPayload {
   userId: string;
@@ -30,24 +33,28 @@ export interface SessionPayload {
   clinicId: string | null;
 }
 
-export async function createSessionToken(payload: SessionPayload): Promise<string> {
-  return new SignJWT(payload as unknown as Record<string, unknown>)
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime(TOKEN_EXPIRY)
-    .sign(JWT_SECRET);
+/**
+ * Versões já tipadas com o payload deste projeto. O pacote expõe
+ * `verifySessionToken<T>` genérico; sem o parâmetro de tipo o retorno é
+ * `unknown`, e o compilador rejeita acesso a propriedade — inclusive com
+ * `strict: false`. Fixar o tipo aqui, uma vez, é melhor que repeti-lo nos
+ * oito call sites, e preserva exatamente a assinatura que este projeto já
+ * tinha antes da migração.
+ */
+export function verifySessionToken(
+  token: string,
+): Promise<SessionPayload | null> {
+  return verifyToken<SessionPayload>(token);
 }
 
-export async function verifySessionToken(token: string): Promise<SessionPayload | null> {
-  try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
-    return payload as unknown as SessionPayload;
-  } catch {
-    return null;
-  }
+export function getSessionFromRequest(
+  request: Request,
+  cookieName?: string,
+): Promise<SessionPayload | null> {
+  return getSession<SessionPayload>(request, cookieName);
 }
 
-// ─── Password reset tokens ───────────────────────────────────────────────────
+const RESET_TOKEN_EXPIRY_HOURS = 1;
 
 function hashToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
@@ -55,46 +62,35 @@ function hashToken(token: string): string {
 
 export async function createResetToken(userId: string): Promise<string> {
   const rawToken = crypto.randomBytes(32).toString("hex");
-  const tokenHash = hashToken(rawToken);
-  const expiresAt = new Date(Date.now() + RESET_TOKEN_EXPIRY_HOURS * 60 * 60 * 1000);
-
   await db.insert(passwordResetTokens).values({
     userId,
-    tokenHash,
-    expiresAt,
+    tokenHash: hashToken(rawToken),
+    expiresAt: new Date(Date.now() + RESET_TOKEN_EXPIRY_HOURS * 3600 * 1000),
   } as any);
-
   return rawToken;
 }
 
 export async function verifyResetToken(token: string): Promise<string | null> {
-  const tokenHash = hashToken(token);
-  const now = new Date();
-
   const [record] = await db
     .select()
     .from(passwordResetTokens)
     .where(
       and(
-        eq(passwordResetTokens.tokenHash, tokenHash),
+        eq(passwordResetTokens.tokenHash, hashToken(token)),
         eq(passwordResetTokens.used, false),
-        gt(passwordResetTokens.expiresAt, now)
-      )
+        gt(passwordResetTokens.expiresAt, new Date()),
+      ),
     )
     .limit(1);
-
   return record ? record.userId : null;
 }
 
 export async function markTokenUsed(token: string): Promise<void> {
-  const tokenHash = hashToken(token);
   await db
     .update(passwordResetTokens)
     .set({ used: true } as any)
-    .where(eq(passwordResetTokens.tokenHash, tokenHash));
+    .where(eq(passwordResetTokens.tokenHash, hashToken(token)));
 }
-
-// ─── User lookup ─────────────────────────────────────────────────────────────
 
 export async function getAdminByEmail(email: string) {
   const [user] = await db
@@ -127,5 +123,3 @@ export async function updatePassword(userId: string, newPasswordHash: string) {
     .set({ passwordHash: newPasswordHash, updatedAt: new Date() } as any)
     .where(eq(adminUsers.id, userId));
 }
-
-export { COOKIE_NAME };
