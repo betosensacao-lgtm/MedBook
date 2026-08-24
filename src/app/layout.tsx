@@ -17,7 +17,7 @@ const inter = Inter({
   weight: ["300", "400", "500", "600"],
 });
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://medbook-amber.vercel.app";
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://med-book-eight-xi.vercel.app";
 
 export const metadata: Metadata = {
   title: {

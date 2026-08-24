@@ -65,7 +65,7 @@ DATABASE_URL=               # Supabase pooler (port 6543, prepare: false)
 DIRECT_URL=                 # Supabase direct connection (port 5432, for migrations)
 GROQ_API_KEY=                # Groq API key
 CLINIC_ID=                   # Default clinic ID in the database
-NEXT_PUBLIC_APP_URL=         # Deploy URL (e.g. https://medbook-amber.vercel.app)
+NEXT_PUBLIC_APP_URL=         # Deploy URL (e.g. https://med-book-eight-xi.vercel.app)
 JWT_SECRET=                  # Admin session signing secret
 RESEND_API_KEY=              # Transactional email
 EMAIL_FROM=                  # Sender address for emails
@@ -113,7 +113,7 @@ FACEBOOK_PAGE_ID=
 ## Embedding via iframe
 
 ```html
-<iframe src="https://medbook-amber.vercel.app/chat/embed"
+<iframe src="https://med-book-eight-xi.vercel.app/chat/embed"
   style="position:fixed;bottom:20px;right:20px;width:380px;height:600px;border:none;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.15);z-index:9999">
 </iframe>
 ```
