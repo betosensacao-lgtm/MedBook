@@ -16,14 +16,14 @@ export {
 } from "@betosensacao-lgtm/agent-core";
 
 /**
- * O encadeamento anterior era:
+ * The previous chain was:
  *   JWT_SECRET || ADMIN_PASSWORD || "medbook-dev-secret-key-change-in-production"
  *
- * Em produção JWT_SECRET não estava configurada, então a chave que assinava
- * as sessões era a SENHA DO ADMIN. Quem capturasse um token podia atacá-lo
- * offline e recuperar a senha; quem soubesse a senha forjava qualquer
- * sessão, inclusive super_admin. Corrigido por variável de ambiente em
- * 2026-08-24; o fallback sai do código aqui.
+ * In production JWT_SECRET was not set, so the key signing every session was
+ * THE ADMIN PASSWORD. Anyone who captured a token could attack it offline and
+ * recover that password; anyone who knew the password could forge any
+ * session, super_admin included. Fixed by setting the environment variable on
+ * 2026-08-24; this commit removes the fallback from the code itself.
  */
 
 export interface SessionPayload {

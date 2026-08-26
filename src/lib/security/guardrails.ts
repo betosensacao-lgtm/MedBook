@@ -77,6 +77,18 @@ export function checkPatientMessage(
   const inspected = inspectInput(message, {
     onEvent: (event) => logSecurityEvent(toLegacyEvent(event, sessionId, clinicId)),
   });
+
+  // MedBook never had a length cap before; the package applies one at 4000
+  // characters. Cutting a patient's symptom description in silence is not
+  // acceptable in a clinical context, so at least make it visible.
+  if (inspected.wasTruncated) {
+    console.warn("[SECURITY] patient message truncated at the length cap", {
+      sessionId,
+      clinicId,
+      originalLength: message.length,
+    });
+  }
+
   return inspected.text;
 }
 
