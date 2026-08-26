@@ -7,7 +7,7 @@ import { getOrCreateSession, getChatMessages, saveChatMessage } from "@/lib/chat
 import { db } from "@/db";
 import { chatSessions } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { applyGuardrails, validateOutput, logSecurityEvent } from "@/lib/security/guardrails";
+import { checkPatientMessage, checkAssistantReply } from "@/lib/security/guardrails";
 
 const NAME_PATTERNS = [
   /my name is (.+?)(?:,|\.|!|\?|$)/i,
@@ -92,8 +92,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Apply guardrails (input sanitization + injection detection)
-    const { safeMessage } = applyGuardrails(message, sessionId, clinicId);
+    // Apply guardrails (input inspection + injection neutralisation)
+    const safeMessage = checkPatientMessage(message, sessionId, clinicId);
 
     await getOrCreateSession(sessionId, clinicId);
 
@@ -115,19 +115,8 @@ export async function POST(request: NextRequest) {
         ? lastMessage.content
         : "Sorry, an error occurred while processing your message.";
 
-    // Validate output (ensure no system prompt leakage)
-    const outputCheck = validateOutput(reply);
-    if (!outputCheck.safe) {
-      logSecurityEvent({
-        type: "output_leak",
-        sessionId,
-        clinicId,
-        message: "Output contained restricted patterns",
-        patterns: ["output_validation"],
-        timestamp: new Date(),
-      });
-      reply = outputCheck.cleaned;
-    }
+    // Validate output (redact any leaked secret); the adapter logs internally
+    reply = checkAssistantReply(reply, sessionId, clinicId);
 
     await saveChatMessage(sessionId, "user", message);
     await saveChatMessage(sessionId, "assistant", reply);

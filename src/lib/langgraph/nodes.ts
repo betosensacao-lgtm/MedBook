@@ -1,6 +1,6 @@
 import { SystemMessage, HumanMessage, AIMessage } from "@langchain/core/messages";
 import { getClinicContext } from "@/lib/rag/knowledge-base";
-import { hardenSystemPrompt, sanitizeInput, validateOutput } from "@/lib/security/guardrails";
+import { buildSystemPrompt, checkAssistantReply } from "@/lib/security/guardrails";
 import { createGroqChatModel, executeToolCalls, schedulingTools, preAnamnesisTools } from "./tools";
 import type { ChatStateType, Intent } from "./state";
 
@@ -20,9 +20,9 @@ Respond with ONLY the intent (one word, uppercase, no punctuation).`;
 
 export async function routerNode(state: ChatStateType): Promise<Partial<ChatStateType>> {
   const lastMessage = state.messages[state.messages.length - 1];
-  const rawMessage = (lastMessage?.content as string) || "";
-
-  const { clean: userMessage } = sanitizeInput(rawMessage);
+  // Already inspected upstream by the chat route; inspecting again here would
+  // double-wrap a neutralised injection.
+  const userMessage = (lastMessage?.content as string) || "";
 
   try {
     const model = createGroqChatModel({ temperature: 0, maxTokens: 20 });
@@ -41,16 +41,13 @@ export async function routerNode(state: ChatStateType): Promise<Partial<ChatStat
   }
 }
 
-const DOUBT_SYSTEM_PROMPT = `You are a virtual assistant for a medical clinic.
+// Instructions only. The clinic context and the conversation history are
+// appended AFTER the hardened block, so the security rules are never the last
+// thing the model reads.
+const DOUBT_SYSTEM_PROMPT_INSTRUCTIONS = `You are a virtual assistant for a medical clinic.
 Use the information below to answer the patient's questions clearly and objectively.
 If you don't know the answer, say you don't have that information and suggest contacting the clinic directly.
-Do not make diagnoses or prescribe medication.
-
-CLINIC CONTEXT:
-{context}
-
-Conversation history:
-{history}`;
+Do not make diagnoses or prescribe medication.`;
 
 export async function doubtResolutionNode(
   state: ChatStateType
@@ -63,11 +60,13 @@ export async function doubtResolutionNode(
     .map((m) => `${m instanceof HumanMessage ? "Patient" : "Assistant"}: ${m.content}`)
     .join("\n");
 
-  const systemPrompt = hardenSystemPrompt(
-    DOUBT_SYSTEM_PROMPT
-      .replace("{context}", context || "No information on file.")
-      .replace("{history}", history)
-  );
+  const systemPrompt = `${buildSystemPrompt(DOUBT_SYSTEM_PROMPT_INSTRUCTIONS)}
+
+CLINIC CONTEXT:
+${context || "No information on file."}
+
+Conversation history:
+${history}`;
 
   try {
     const model = createGroqChatModel({ temperature: 0.3, maxTokens: 1024 });
@@ -76,14 +75,15 @@ export async function doubtResolutionNode(
       new HumanMessage((state.messages[state.messages.length - 1]?.content as string) || ""),
     ]);
 
-    let responseText = typeof response.content === "string"
+    const rawResponseText = typeof response.content === "string"
       ? response.content
       : "Sorry, I couldn't process your question.";
 
-    const outputCheck = validateOutput(responseText);
-    if (!outputCheck.safe) {
-      responseText = outputCheck.cleaned;
-    }
+    const responseText = checkAssistantReply(
+      rawResponseText,
+      state.sessionId,
+      clinicId,
+    );
 
     return { messages: [new AIMessage(responseText)], completed: true };
   } catch (error) {
@@ -112,7 +112,7 @@ export async function schedulingNode(
   const history = state.messages
     .filter((m) => m instanceof HumanMessage || m instanceof AIMessage);
 
-  const systemPrompt = hardenSystemPrompt(SCHEDULING_SYSTEM_PROMPT);
+  const systemPrompt = buildSystemPrompt(SCHEDULING_SYSTEM_PROMPT);
   const model = createGroqChatModel().bindTools(schedulingTools);
 
   try {
@@ -164,7 +164,7 @@ export async function preAnamnesisNode(
   const history = state.messages
     .filter((m) => m instanceof HumanMessage || m instanceof AIMessage);
 
-  const systemPrompt = hardenSystemPrompt(PRE_ANAMNESIS_SYSTEM_PROMPT);
+  const systemPrompt = buildSystemPrompt(PRE_ANAMNESIS_SYSTEM_PROMPT);
   const model = createGroqChatModel().bindTools(preAnamnesisTools);
 
   try {
