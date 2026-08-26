@@ -12,10 +12,11 @@ interface SessionPayload {
   clinicId: string | null;
 }
 
-// Este arquivo trazia sua própria cópia do encadeamento
-// `JWT_SECRET || ADMIN_PASSWORD || "<literal público>"` e sua própria
-// verificação, sem fixar o algoritmo. Passar pelo agent-core elimina o
-// fallback e garante que middleware e rotas validem sessão do mesmo jeito.
+// This file used to carry its own copy of the
+// `JWT_SECRET || ADMIN_PASSWORD || "<public literal>"` chain and its own
+// verification, without pinning the algorithm. Going through agent-core
+// removes the fallback and makes the middleware and the routes validate a
+// session the same way.
 
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

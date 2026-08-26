@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@betosensacao-lgtm/agent-core':
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: ^0.2.0
+        version: 0.2.0
       '@langchain/core':
         specifier: ^1.2.1
         version: 1.2.1(@opentelemetry/api@1.9.1)(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))(openai@6.45.0(ws@8.21.0)(zod@3.25.76))(ws@8.21.0)
@@ -122,7 +122,7 @@ importers:
         version: 8.57.1
       eslint-config-next:
         specifier: latest
-        version: 16.3.2(@typescript-eslint/parser@8.62.1(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
+        version: 16.3.3(@typescript-eslint/parser@8.62.1(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.19.43)
@@ -337,8 +337,8 @@ packages:
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
 
-  '@betosensacao-lgtm/agent-core@0.1.0':
-    resolution: {integrity: sha512-Ovnqy+/+DZ9RUv04TXJarYxsK8EFBAfeYe0o3veGhpSZ0lGeNH3aKqSqhzidlrjtKhsswRvFY0oA1pFunIZlfA==, tarball: https://npm.pkg.github.com/download/@betosensacao-lgtm/agent-core/0.1.0/0a9ac320e28ff213c54ed78f41f02aa844b803f4}
+  '@betosensacao-lgtm/agent-core@0.2.0':
+    resolution: {integrity: sha512-Q81dUBIVm4UN5E2n41lCZUFcQYIh7TD2TyhL87++WQnkMd1m3vGd84bqgBC2qjE5ZMRY5ZF8JjpRQylSHfB8kw==, tarball: https://npm.pkg.github.com/download/@betosensacao-lgtm/agent-core/0.2.0/4e063651ee3fefae9a74d770d794e06f4dfbdd0a}
     engines: {node: '>=20'}
 
   '@cfworker/json-schema@4.1.1':
@@ -1133,8 +1133,8 @@ packages:
   '@next/env@16.2.10':
     resolution: {integrity: sha512-zLPxg9M0MEHmygpj5OuxjQ+vHMiy/K7cSp74G8ecYolmgUWw0RwN02tF56npup/+qaI8JB97hQgS/r2Hb6QwVA==}
 
-  '@next/eslint-plugin-next@16.3.2':
-    resolution: {integrity: sha512-z+HW1cZgt8QhByw8p2EbxF94AImgsKIYUbtSkA7Zld2T9yrKAlys4jNOcAOCtv6csX2CoA/5qCVyesL5pHmJ0A==}
+  '@next/eslint-plugin-next@16.3.3':
+    resolution: {integrity: sha512-pbEh30vvjKpDoTAmo1v3q2uM4JUi8QaEBpbmjWvGfoec2jLghy/WNtvzAT0bk+Ik9oz6etjt4YjXEk4BQnicCw==}
 
   '@next/swc-darwin-arm64@16.2.10':
     resolution: {integrity: sha512-v9IdJCa0H0mbo+8z5zwUpOk1Vj7RjkcI5uNYf5Ws1y6szf/p3Mzl9hLaST8SCt6L9h8NGnruZcd2+o0NTNwDhA==}
@@ -2657,8 +2657,8 @@ packages:
     engines: {node: '>=6.0'}
     hasBin: true
 
-  eslint-config-next@16.3.2:
-    resolution: {integrity: sha512-gTABOJmyc6pEgSX1Z1VOjBxkSmo5Hkdj+ePclDf8HLGTsnVWzgtDdrOeQrAnUkf0JNJJhwPuXrsIwmFZRKJLoQ==}
+  eslint-config-next@16.3.3:
+    resolution: {integrity: sha512-teqtsR26tnlfXFHfVLTM/4tzEzU8DMu6GS1sddZzhfGzgd2f2ofbgDUcsk6cssSCzX6Tk6fmWifJcdANSdPJrw==}
     peerDependencies:
       eslint: '>=9.0.0'
       typescript: '>=3.3.1'
@@ -5011,7 +5011,7 @@ snapshots:
 
   '@bcoe/v8-coverage@0.2.3': {}
 
-  '@betosensacao-lgtm/agent-core@0.1.0':
+  '@betosensacao-lgtm/agent-core@0.2.0':
     dependencies:
       bcryptjs: 3.0.3
       jose: 6.2.3
@@ -5670,7 +5670,7 @@ snapshots:
 
   '@next/env@16.2.10': {}
 
-  '@next/eslint-plugin-next@16.3.2(eslint@8.57.1)':
+  '@next/eslint-plugin-next@16.3.3(eslint@8.57.1)':
     dependencies:
       '@eslint-community/eslint-utils': 4.9.1(eslint@8.57.1)
       fast-glob: 3.3.1
@@ -7266,9 +7266,9 @@ snapshots:
     optionalDependencies:
       source-map: 0.6.1
 
-  eslint-config-next@16.3.2(@typescript-eslint/parser@8.62.1(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3):
+  eslint-config-next@16.3.3(@typescript-eslint/parser@8.62.1(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3):
     dependencies:
-      '@next/eslint-plugin-next': 16.3.2(eslint@8.57.1)
+      '@next/eslint-plugin-next': 16.3.3(eslint@8.57.1)
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.10
       eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.62.1(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1))(eslint@8.57.1)
