@@ -1,3 +1,4 @@
+import type { BaseMessage, ToolMessage } from "@langchain/core/messages";
 import { SystemMessage, HumanMessage, AIMessage } from "@langchain/core/messages";
 import { getClinicContext } from "@/lib/rag/knowledge-base";
 import { buildSystemPrompt, checkAssistantReply } from "@/lib/security/guardrails";
@@ -131,6 +132,9 @@ function outcomeFallback(toolMessages: { content: unknown }[]): string {
   return "I could not complete that request. Please contact the clinic to confirm.";
 }
 
+/** Enough for check-then-book; bounded so a confused model cannot loop forever. */
+const MAX_TOOL_ROUNDS = 4;
+
 export async function schedulingNode(
   state: ChatStateType
 ): Promise<Partial<ChatStateType>> {
@@ -141,30 +145,35 @@ export async function schedulingNode(
   const model = createGroqChatModel().bindTools(schedulingTools);
 
   try {
-    const response = await model.invoke([
-      new SystemMessage(systemPrompt),
-      ...history,
-    ]);
+    // Booking needs TWO tool rounds -- check_calendar, then create_event -- and
+    // this node used to run exactly one, silently dropping any tool call the
+    // follow-up wanted to make. So the model would say "I'll book that for you"
+    // and nothing was ever written. The hardcoded "Appointment scheduled
+    // successfully!" that used to sit below hid precisely this.
+    const conversation: BaseMessage[] = [new SystemMessage(systemPrompt), ...history];
+    let lastToolMessages: ToolMessage[] = [];
 
-    if (response.tool_calls?.length) {
-      const toolMessages = await executeToolCalls(response.tool_calls);
-      const followUp = await model.invoke([
-        new SystemMessage(systemPrompt),
-        ...history,
-        response,
-        ...toolMessages,
-      ]);
+    for (let round = 0; round < MAX_TOOL_ROUNDS; round += 1) {
+      const response = await model.invoke(conversation);
 
-      return {
-        messages: [
-          new AIMessage((followUp.content as string) || outcomeFallback(toolMessages)),
-        ],
-        completed: true,
-      };
+      if (!response.tool_calls?.length) {
+        const text =
+          (response.content as string) ||
+          (round === 0
+            ? "Please tell me your name, phone number, and the day/time you'd like for your appointment."
+            : outcomeFallback(lastToolMessages));
+        return { messages: [new AIMessage(text)], completed: round > 0 };
+      }
+
+      lastToolMessages = await executeToolCalls(response.tool_calls);
+      conversation.push(response, ...lastToolMessages);
     }
 
+    // Out of rounds: report what the last tool actually said rather than
+    // guessing at an outcome.
     return {
-      messages: [new AIMessage(response.content as string || "Please tell me your name, phone number, and the day/time you'd like for your appointment.")],
+      messages: [new AIMessage(outcomeFallback(lastToolMessages))],
+      completed: true,
     };
   } catch (error) {
     return {
