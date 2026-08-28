@@ -53,7 +53,14 @@ export async function getAvailability(params: {
 }): Promise<AvailabilityResult> {
   const { date } = params;
 
-  if (!ISO_DATE.test(date) || Number.isNaN(Date.parse(`${date}T00:00:00Z`))) {
+  // Round-trip, not just Date.parse: JS rolls impossible dates over, so
+  // "2026-02-30" parses happily as March 2. Without this a nonexistent date
+  // could come back as a confident answer about the day it rolled into.
+  if (!ISO_DATE.test(date)) {
+    return { success: false, date, reason: "invalid_date" };
+  }
+  const parsed = new Date(`${date}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date) {
     return { success: false, date, reason: "invalid_date" };
   }
   if (date < todayIsoDate()) {
@@ -73,7 +80,7 @@ export async function getAvailability(params: {
 
     // getUTCDay() and not getDay(): the date string carries no timezone, so
     // reading it in local time would shift the weekday for anyone west of UTC.
-    const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
+    const weekday = parsed.getUTCDay();
 
     const byProfessional: ProfessionalAvailability[] = [];
     let anyWorksToday = false;
