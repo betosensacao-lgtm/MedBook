@@ -8,6 +8,7 @@ import { db } from "@/db";
 import { chatSessions } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { checkPatientMessage, checkAssistantReply } from "@/lib/security/guardrails";
+import { checkChatRateLimit } from "@/lib/security/rate-limit";
 
 const NAME_PATTERNS = [
   /my name is (.+?)(?:,|\.|!|\?|$)/i,
@@ -33,28 +34,6 @@ function extractPhone(text: string): string | null {
     return digits;
   }
   return null;
-}
-
-// Rate limiting: simple in-memory store
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 30; // messages per minute
-const RATE_WINDOW = 60 * 1000;
-
-function checkRateLimit(sessionId: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(sessionId);
-
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(sessionId, { count: 1, resetAt: now + RATE_WINDOW });
-    return true;
-  }
-
-  if (entry.count >= RATE_LIMIT) {
-    return false;
-  }
-
-  entry.count++;
-  return true;
 }
 
 async function updatePatientInfo(sessionId: string) {
@@ -85,10 +64,14 @@ export async function POST(request: NextRequest) {
     const sessionId = incomingId || crypto.randomUUID();
 
     // Rate limiting
-    if (!checkRateLimit(sessionId)) {
+    const limit = await checkChatRateLimit(request);
+    if (!limit.allowed) {
       return NextResponse.json(
         { error: "Message limit reached. Please wait a moment." },
-        { status: 429 }
+        {
+          status: 429,
+          headers: { "Retry-After": String(Math.ceil(limit.retryAfterMs / 1000)) },
+        },
       );
     }
 

@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@betosensacao-lgtm/agent-core':
-        specifier: ^0.2.0
-        version: 0.2.0
+        specifier: ^0.3.0
+        version: 0.3.0
       '@langchain/core':
         specifier: ^1.2.1
         version: 1.2.1(@opentelemetry/api@1.9.1)(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))(openai@6.45.0(ws@8.21.0)(zod@3.25.76))(ws@8.21.0)
@@ -337,8 +337,8 @@ packages:
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
 
-  '@betosensacao-lgtm/agent-core@0.2.0':
-    resolution: {integrity: sha512-Q81dUBIVm4UN5E2n41lCZUFcQYIh7TD2TyhL87++WQnkMd1m3vGd84bqgBC2qjE5ZMRY5ZF8JjpRQylSHfB8kw==, tarball: https://npm.pkg.github.com/download/@betosensacao-lgtm/agent-core/0.2.0/4e063651ee3fefae9a74d770d794e06f4dfbdd0a}
+  '@betosensacao-lgtm/agent-core@0.3.0':
+    resolution: {integrity: sha512-rQTcDDhREyPqakf515I0YTvlJMrSeAfCyEeMzmdvNVyNwhgeINnWtlcQzsiHzzZ8f3+lVZNY2YxsBrDIjMHS5A==, tarball: https://npm.pkg.github.com/download/@betosensacao-lgtm/agent-core/0.3.0/9781fcfe17b88f5fb5638c0d9e6c5953b616c66f}
     engines: {node: '>=20'}
 
   '@cfworker/json-schema@4.1.1':
@@ -5011,7 +5011,7 @@ snapshots:
 
   '@bcoe/v8-coverage@0.2.3': {}
 
-  '@betosensacao-lgtm/agent-core@0.2.0':
+  '@betosensacao-lgtm/agent-core@0.3.0':
     dependencies:
       bcryptjs: 3.0.3
       jose: 6.2.3
