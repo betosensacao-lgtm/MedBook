@@ -106,6 +106,31 @@ MANDATORY RULES:
 
 Be very polite, attentive, and human. Respond in English.`;
 
+
+/**
+ * When the model returns nothing, do not invent an outcome.
+ *
+ * This used to fall back to the literal string "Appointment scheduled
+ * successfully!", which told the patient the appointment existed no matter what
+ * the tool had reported. In production it announced a booking that was never
+ * written to the database. The tool already knows whether it succeeded; ask it.
+ */
+function outcomeFallback(toolMessages: { content: unknown }[]): string {
+  for (let i = toolMessages.length - 1; i >= 0; i -= 1) {
+    try {
+      const parsed = JSON.parse(String(toolMessages[i].content));
+      if (typeof parsed?.success === "boolean") {
+        return parsed.success
+          ? "Your appointment has been booked."
+          : "I could not complete that request. Please contact the clinic to confirm before assuming anything was booked.";
+      }
+    } catch {
+      // Not JSON; keep looking at earlier tool results.
+    }
+  }
+  return "I could not complete that request. Please contact the clinic to confirm.";
+}
+
 export async function schedulingNode(
   state: ChatStateType
 ): Promise<Partial<ChatStateType>> {
@@ -131,7 +156,9 @@ export async function schedulingNode(
       ]);
 
       return {
-        messages: [new AIMessage(followUp.content as string || "Appointment scheduled successfully!")],
+        messages: [
+          new AIMessage((followUp.content as string) || outcomeFallback(toolMessages)),
+        ],
         completed: true,
       };
     }
