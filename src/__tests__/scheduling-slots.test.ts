@@ -71,6 +71,11 @@ describe("buildSlots", () => {
     expect(buildSlots({ start: "09:00", end: "17:00", slotMinutes: -30 })).toEqual([]);
   });
 
+  it("returns nothing for a fractional slot duration", () => {
+    // A fractional step would produce "09:12.5" -- not a time.
+    expect(buildSlots({ start: "09:00", end: "10:00", slotMinutes: 12.5 })).toEqual([]);
+  });
+
   it("returns nothing for unparseable working hours", () => {
     expect(buildSlots({ start: "banana", end: "17:00", slotMinutes: 30 })).toEqual([]);
   });

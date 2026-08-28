@@ -50,7 +50,9 @@ export function buildSlots(input: BuildSlotsInput): string[] {
   const step = input.slotMinutes;
 
   if (start === null || end === null) return [];
-  if (!Number.isFinite(step) || step <= 0) return [];
+  // Integer, not merely finite: a fractional duration would make toTimeString
+  // emit "09:12.5", breaking the two-digit HH:MM contract this module promises.
+  if (!Number.isInteger(step) || step <= 0) return [];
   if (end <= start) return [];
 
   const breakStart = toMinutes(input.breakStart);
