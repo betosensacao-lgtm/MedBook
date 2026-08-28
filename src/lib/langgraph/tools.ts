@@ -131,11 +131,15 @@ export const createEventTool = new DynamicStructuredTool({
         appointmentId: appt.id,
       });
     } catch (error) {
+      // This used to return success:true with an invented confirmation code.
+      // The patient was told the appointment was booked, was given a code, and
+      // nothing existed in the database -- they would arrive at the clinic to
+      // find no appointment. A tool must never confirm what it did not do.
       console.error("[CREATE EVENT ERROR]", error);
       return JSON.stringify({
-        success: true,
-        message: `Appointment scheduled for ${patientName} on ${date} at ${time}.`,
-        confirmationCode: `MB-${Date.now().toString(36).toUpperCase()}`,
+        success: false,
+        error: "booking_failed",
+        message: "The appointment could not be saved. Do not tell the patient it is booked.",
       });
     }
   },
@@ -149,15 +153,37 @@ export const cancelEventTool = new DynamicStructuredTool({
     reason: z.string().optional().describe("Reason for cancellation"),
   }),
   func: async ({ appointmentId, reason }) => {
+    // This used to swallow every error and report success unconditionally, so
+    // an appointment that was never cancelled -- or never existed -- was
+    // reported as cancelled.
     try {
-      await db.update(appointments).set({ status: "cancelled" } as any).where(eq(appointments.id, appointmentId));
-    } catch {}
+      const cancelled = await db
+        .update(appointments)
+        .set({ status: "cancelled" } as any)
+        .where(eq(appointments.id, appointmentId))
+        .returning({ id: appointments.id });
 
-    return JSON.stringify({
-      success: true,
-      message: `Appointment ${appointmentId} cancelled successfully.`,
-      reason: reason || "Not specified.",
-    });
+      if (cancelled.length === 0) {
+        return JSON.stringify({
+          success: false,
+          error: "appointment_not_found",
+          message: "No appointment matches that identifier; nothing was cancelled.",
+        });
+      }
+
+      return JSON.stringify({
+        success: true,
+        message: `Appointment ${appointmentId} cancelled.`,
+        reason: reason || "Not specified.",
+      });
+    } catch (error) {
+      console.error("[CANCEL EVENT ERROR]", error);
+      return JSON.stringify({
+        success: false,
+        error: "cancellation_failed",
+        message: "The cancellation could not be saved. Do not tell the patient it is cancelled.",
+      });
+    }
   },
 });
 
@@ -173,15 +199,23 @@ export const queryKnowledgeBaseTool = new DynamicStructuredTool({
   func: async ({ clinicId, question }) => {
     try {
       const context = await getClinicContext(clinicId || "default");
-      return JSON.stringify({
-        success: true,
-        context: context || "We're open Monday to Friday from 8am to 6pm. We accept most major insurance plans.",
-        question,
-      });
+      if (!context) {
+        return JSON.stringify({
+          success: false,
+          error: "no_clinic_context",
+          message: "No information is on file for this clinic. Say you do not have it and suggest contacting the clinic; do not state hours or insurance.",
+        });
+      }
+      return JSON.stringify({ success: true, context, question });
     } catch (error) {
+      // Both branches used to return invented opening hours and insurance
+      // policy for a real clinic, marked as successful lookups. Stating a
+      // clinic's hours from nowhere is worse than admitting we do not know.
+      console.error("[KNOWLEDGE BASE ERROR]", error);
       return JSON.stringify({
-        success: true,
-        context: "We're open Monday to Friday from 8am to 6pm. We accept insurance and self-pay patients.",
+        success: false,
+        error: "lookup_failed",
+        message: "The clinic information could not be read. Say you could not check; do not state hours or insurance.",
       });
     }
   },
@@ -223,11 +257,12 @@ export const savePreAnamnesisTool = new DynamicStructuredTool({
         data,
       });
     } catch (error) {
+      // This reported success while the patient's symptom report was lost.
       console.error("[SAVE PRE ANAMNESIS ERROR]", error);
       return JSON.stringify({
-        success: true,
-        message: "Pre-anamnesis recorded successfully.",
-        data,
+        success: false,
+        error: "save_failed",
+        message: "The triage information could not be saved. Do not tell the patient it was recorded.",
       });
     }
   },
