@@ -16,12 +16,21 @@ export const checkCalendarTool = new DynamicStructuredTool({
   description:
     "Looks up real available time slots for the clinic on a given date, computed from each professional's working hours and the appointments already booked. When availability cannot be determined it returns success:false with a reason — in that case tell the patient you could not check, and never guess or offer times.",
   schema: z.object({
-    clinicId: z.string().optional().describe("Clinic ID"),
-    professionalId: z.string().optional().describe("Professional ID"),
+    // No clinicId here on purpose: the server knows which clinic it serves, and
+    // a model asked for one will invent something like "default", which used to
+    // blow up the uuid cast and take the whole lookup down with it.
+    professionalId: z
+      .string()
+      .optional()
+      .describe("Professional ID, only if the patient already chose one. Omit otherwise."),
     date: z.string().describe("Date in YYYY-MM-DD format"),
   }),
-  func: async ({ date, clinicId, professionalId }) => {
-    const result = await getAvailability({ date, clinicId, professionalId });
+  func: async ({ date, professionalId }) => {
+    const result = await getAvailability({
+      date,
+      clinicId: process.env.CLINIC_ID,
+      professionalId,
+    });
     return JSON.stringify(result);
   },
 });

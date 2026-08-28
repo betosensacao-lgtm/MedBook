@@ -29,6 +29,17 @@ export type AvailabilityResult =
   | { success: false; date: string; reason: AvailabilityFailure };
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * A model calling this tool will happily invent an id like "default" or "any".
+ * Passing that to Postgres throws on the uuid cast, which surfaced as
+ * `lookup_failed` and made the whole feature unusable in production. An
+ * invented filter is ignored instead: narrowing is a hint, not the answer.
+ */
+function asUuid(value: string | undefined): string | undefined {
+  return value && UUID.test(value) ? value : undefined;
+}
 
 function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
@@ -68,9 +79,12 @@ export async function getAvailability(params: {
   }
 
   try {
+    const clinicId = asUuid(params.clinicId);
+    const professionalId = asUuid(params.professionalId);
+
     const filters = [eq(professionals.isActive, true)];
-    if (params.clinicId) filters.push(eq(professionals.clinicId, params.clinicId));
-    if (params.professionalId) filters.push(eq(professionals.id, params.professionalId));
+    if (clinicId) filters.push(eq(professionals.clinicId, clinicId));
+    if (professionalId) filters.push(eq(professionals.id, professionalId));
 
     const staff = await db.select().from(professionals).where(and(...filters));
 
