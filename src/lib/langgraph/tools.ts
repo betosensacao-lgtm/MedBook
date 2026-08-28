@@ -7,6 +7,9 @@ import { db } from "@/db";
 import { appointments, preAnamnesis, triageSessions, chatSessions, users, clinics, professionals } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getAvailability } from "@/lib/scheduling/availability";
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 import { toMinutes, toTimeString } from "@/lib/scheduling/slots";
 
 // ─── Appointment Scheduling Tool ─────────────────────────────────────────────
@@ -37,10 +40,15 @@ export const checkCalendarTool = new DynamicStructuredTool({
 
 export const createEventTool = new DynamicStructuredTool({
   name: "create_event",
-  description: "Creates an appointment at the clinic and registers the patient in the database.",
+  description:
+    "Books an appointment at a time confirmed to be free. Call check_calendar first and pass the professionalId whose slot the patient chose. Returns success:false with a reason when the booking cannot be made -- in that case never tell the patient it is booked.",
   schema: z.object({
-    clinicId: z.string().optional().describe("Clinic ID"),
-    professionalId: z.string().optional().describe("Professional ID"),
+    // No clinicId: the server knows which clinic it serves. Asking a model for
+    // one only invites it to invent a value.
+    professionalId: z
+      .string()
+      .optional()
+      .describe("Professional ID returned by check_calendar for the slot the patient chose"),
     patientName: z.string().describe("Patient's name"),
     patientPhone: z.string().describe("Patient's phone number"),
     patientEmail: z.string().optional().describe("Patient's email"),
@@ -48,102 +56,144 @@ export const createEventTool = new DynamicStructuredTool({
     time: z.string().describe("Time in HH:MM format"),
     notes: z.string().optional().describe("Notes or reason for the appointment"),
   }),
-  func: async ({ patientName, patientPhone, patientEmail, date, time, notes }) => {
+  func: async ({ professionalId, patientName, patientPhone, patientEmail, date, time, notes }) => {
     try {
-      // 1. Get or create default clinic & professional
-      let clinicList = await db.select().from(clinics).limit(1);
-      let clinic = clinicList[0];
+      const configuredClinic = process.env.CLINIC_ID;
+      if (!configuredClinic || !UUID_PATTERN.test(configuredClinic)) {
+        return JSON.stringify({
+          success: false,
+          error: "clinic_not_configured",
+          message: "The clinic is not configured. Do not tell the patient the appointment is booked.",
+        });
+      }
+
+      const [clinic] = await db
+        .select()
+        .from(clinics)
+        .where(eq(clinics.id, configuredClinic))
+        .limit(1);
+
       if (!clinic) {
-        let userList = await db.select().from(users).limit(1);
-        let owner = userList[0];
-        if (!owner) {
-          [owner] = await db.insert(users).values({
-            email: "admin@medbook.dev",
-            name: "Dr. Admin",
-            role: "clinic_admin",
-            supabaseId: `sb-${crypto.randomUUID()}`,
-          } as any).returning();
-        }
-        [clinic] = await db.insert(clinics).values({
-          name: "MedBook Health Clinic",
-          slug: "medbook-health",
-          specialty: "general_practice",
-          phone: patientPhone || "+1 555 123 4567",
-          email: "contact@medbook.dev",
-          ownerId: owner.id,
-        } as any).returning();
+        return JSON.stringify({
+          success: false,
+          error: "clinic_not_found",
+          message: "The configured clinic does not exist. Do not tell the patient the appointment is booked.",
+        });
       }
 
-      let profList = await db.select().from(professionals).limit(1);
-      let prof = profList[0];
+      // Book only into a slot that is actually free, read from the same source
+      // check_calendar reads. This used to pick `professionals` LIMIT 1 with no
+      // ordering, no clinic filter and no isActive filter, and never checked
+      // whether the time was taken -- so it could book Dr. A into a slot that
+      // had been offered for Dr. B, or double-book one that was already gone.
+      const availability = await getAvailability({
+        date,
+        clinicId: clinic.id,
+        professionalId,
+      });
+
+      if (!availability.success) {
+        return JSON.stringify({
+          success: false,
+          error: availability.reason,
+          message: "Availability could not be confirmed. Do not tell the patient the appointment is booked.",
+        });
+      }
+
+      const freeFor = availability.byProfessional.filter((p) => p.slots.includes(time));
+      if (freeFor.length === 0) {
+        return JSON.stringify({
+          success: false,
+          error: "slot_unavailable",
+          message: `${time} is not available on ${date}. Offer one of the listed times instead.`,
+          availableSlots: availability.availableSlots,
+        });
+      }
+
+      const chosen = freeFor[0];
+
+      const [prof] = await db
+        .select()
+        .from(professionals)
+        .where(eq(professionals.id, chosen.professionalId))
+        .limit(1);
+
       if (!prof) {
-        [prof] = await db.insert(professionals).values({
-          clinicId: clinic.id,
-          name: "Dr. Alex Carter",
-          specialty: "General Practice",
-        } as any).returning();
+        return JSON.stringify({
+          success: false,
+          error: "professional_not_found",
+          message: "The professional could not be loaded. Do not tell the patient the appointment is booked.",
+        });
       }
 
-      // 2. Derive a real end time from the professional's slot duration.
-      // Checked before any patient row is written: a malformed time must not
-      // leave a half-created patient behind and then fail.
-      const slotMinutes = prof.slotDuration ?? 30;
       const startMinutes = toMinutes(time);
       if (startMinutes === null) {
-        return JSON.stringify({ success: false, error: "invalid_time" });
+        return JSON.stringify({
+          success: false,
+          error: "invalid_time",
+          message: "The time is not valid. Do not tell the patient the appointment is booked.",
+        });
       }
-      const endTime = toTimeString(startMinutes + slotMinutes);
+      const endTime = toTimeString(startMinutes + (prof.slotDuration ?? 30));
 
-      // 3. Get or create patient user
-      let patientEmailVal = patientEmail || `${patientPhone.replace(/\D/g, "")}@patient.medbook`;
-      let [patientUser] = await db.select().from(users).where(eq(users.email, patientEmailVal)).limit(1);
+      // Get or create the patient.
+      const patientEmailVal = patientEmail || `${patientPhone.replace(/\D/g, "")}@patient.medbook`;
+      let [patientUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, patientEmailVal))
+        .limit(1);
+
       if (!patientUser) {
-        [patientUser] = await db.insert(users).values({
-          email: patientEmailVal,
-          name: patientName,
-          phone: patientPhone,
-          role: "patient",
-          supabaseId: `patient-${crypto.randomUUID()}`,
-        } as any).returning();
+        [patientUser] = await db
+          .insert(users)
+          .values({
+            email: patientEmailVal,
+            name: patientName,
+            phone: patientPhone,
+            role: "patient",
+            supabaseId: `patient-${crypto.randomUUID()}`,
+          } as any)
+          .returning();
       } else {
-        await db.update(users).set({ name: patientName, phone: patientPhone } as any).where(eq(users.id, patientUser.id));
+        await db
+          .update(users)
+          .set({ name: patientName, phone: patientPhone } as any)
+          .where(eq(users.id, patientUser.id));
       }
 
-      // 4. Create appointment
-      const [appt] = await db.insert(appointments).values({
-        patientId: patientUser.id,
-        clinicId: clinic.id,
-        professionalId: prof.id,
-        date: date,
-        startTime: time,
-        endTime,
-        status: "confirmed",
-        notes: notes || "Scheduled via MedBook Chat",
-      } as any).returning();
+      // Note: availability was read a moment ago, so two patients racing for the
+      // same slot could both pass. Closing that needs a unique index on
+      // (professional_id, date, start_time) where status <> 'cancelled'.
+      const [appt] = await db
+        .insert(appointments)
+        .values({
+          patientId: patientUser.id,
+          clinicId: clinic.id,
+          professionalId: prof.id,
+          date,
+          startTime: time,
+          endTime,
+          status: "confirmed",
+          notes: notes || "Scheduled via MedBook Chat",
+        } as any)
+        .returning();
 
-      // 5. Update chat session info
-      const sessionList = await db.select().from(chatSessions).limit(1);
-      if (sessionList[0]) {
-        await db.update(chatSessions).set({
-          patientName,
-          patientPhone,
-          patientEmail: patientEmailVal,
-        } as any).where(eq(chatSessions.id, sessionList[0].id));
-      }
-
-      const confirmationCode = `MB-${appt.id.slice(0, 6).toUpperCase()}`;
+      // The chat session's patient details are updated by the route, which knows
+      // the current sessionId. This tool used to update `chatSessions` LIMIT 1 --
+      // writing one patient's name and phone onto somebody else's conversation.
 
       return JSON.stringify({
         success: true,
-        message: `Appointment scheduled successfully for ${patientName} on ${date} at ${time}.`,
-        confirmationCode,
+        message: `Appointment scheduled for ${patientName} with ${prof.name} on ${date} at ${time}.`,
+        confirmationCode: `MB-${appt.id.slice(0, 6).toUpperCase()}`,
         appointmentId: appt.id,
+        professionalName: prof.name,
       });
     } catch (error) {
       // This used to return success:true with an invented confirmation code.
       // The patient was told the appointment was booked, was given a code, and
-      // nothing existed in the database -- they would arrive at the clinic to
-      // find no appointment. A tool must never confirm what it did not do.
+      // nothing existed in the database.
       console.error("[CREATE EVENT ERROR]", error);
       return JSON.stringify({
         success: false,
